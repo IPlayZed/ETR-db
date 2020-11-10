@@ -75,8 +75,13 @@ WSGI_APPLICATION = 'etr.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
+        'ENGINE': 'mysql.connector.django',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'USER':'root',
+        'PASSWORD':'',
+        'OPTIONS': {
+            'autocommit': True,
+        }
     }
 }
 
