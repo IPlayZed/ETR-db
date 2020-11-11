@@ -2,8 +2,8 @@
 -- version 5.0.3
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Nov 10, 2020 at 09:29 PM
+-- Host: localhost
+-- Generation Time: Nov 11, 2020 at 04:18 PM
 -- Server version: 10.4.14-MariaDB
 -- PHP Version: 7.4.11
 
@@ -200,6 +200,12 @@ ALTER TABLE `terem`
 ALTER TABLE `felvetel`
   ADD CONSTRAINT `felvett_kurzus` FOREIGN KEY (`kurzus_id`) REFERENCES `kurzus` (`kurzus_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `felvevo_hallgato` FOREIGN KEY (`etr_id`) REFERENCES `hallgato` (`hallgato_etr_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `gepterem`
+--
+ALTER TABLE `gepterem`
+  ADD CONSTRAINT `parent` FOREIGN KEY (`teremszam`) REFERENCES `terem` (`teremszam`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `kurzus`
