@@ -2,8 +2,8 @@
 -- version 5.0.3
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Nov 10, 2020 at 09:29 PM
+-- Host: localhost
+-- Generation Time: Nov 13, 2020 at 09:37 PM
 -- Server version: 10.4.14-MariaDB
 -- PHP Version: 7.4.11
 
@@ -45,7 +45,7 @@ CREATE TABLE `felvetel` (
 CREATE TABLE `gepterem` (
   `teremszam` varchar(6) COLLATE utf8_hungarian_ci NOT NULL,
   `ferohel` int(10) UNSIGNED DEFAULT NULL,
-  `cim` varchar(50) COLLATE utf8_hungarian_ci DEFAULT NULL,
+  `cim` varchar(100) COLLATE utf8_hungarian_ci DEFAULT NULL,
   `gepek_szama` int(10) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_hungarian_ci;
 
@@ -58,8 +58,8 @@ CREATE TABLE `gepterem` (
 CREATE TABLE `hallgato` (
   `hallgato_etr_id` varchar(6) COLLATE utf8_hungarian_ci NOT NULL,
   `lakhely` varchar(100) COLLATE utf8_hungarian_ci DEFAULT NULL,
-  `tagozat_forma` char(1) COLLATE utf8_hungarian_ci NOT NULL,
-  `koltsegteritesi_forma` char(1) COLLATE utf8_hungarian_ci NOT NULL,
+  `tagozat_forma` char(20) COLLATE utf8_hungarian_ci NOT NULL,
+  `koltsegteritesi_forma` char(20) COLLATE utf8_hungarian_ci NOT NULL,
   `vezeteknev` varchar(30) COLLATE utf8_hungarian_ci NOT NULL,
   `keresztnev` varchar(30) COLLATE utf8_hungarian_ci NOT NULL,
   `titulus` varchar(5) COLLATE utf8_hungarian_ci DEFAULT NULL
@@ -128,7 +128,7 @@ CREATE TABLE `targy` (
 CREATE TABLE `terem` (
   `teremszam` varchar(6) COLLATE utf8_hungarian_ci NOT NULL,
   `ferohely` int(10) UNSIGNED DEFAULT NULL,
-  `cim` varchar(50) COLLATE utf8_hungarian_ci DEFAULT NULL
+  `cim` varchar(100) COLLATE utf8_hungarian_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_hungarian_ci;
 
 --
@@ -139,9 +139,7 @@ CREATE TABLE `terem` (
 -- Indexes for table `felvetel`
 --
 ALTER TABLE `felvetel`
-  ADD PRIMARY KEY (`etr_id`,`kurzus_id`),
-  ADD UNIQUE KEY `etr_id` (`etr_id`,`kurzus_id`),
-  ADD KEY `felvett_kurzus` (`kurzus_id`);
+  ADD PRIMARY KEY (`etr_id`,`kurzus_id`);
 
 --
 -- Indexes for table `gepterem`
@@ -159,18 +157,13 @@ ALTER TABLE `hallgato`
 -- Indexes for table `kurzus`
 --
 ALTER TABLE `kurzus`
-  ADD PRIMARY KEY (`kurzus_id`),
-  ADD KEY `helyszine` (`teremszam`),
-  ADD KEY `kurzusa` (`targykod`),
-  ADD KEY `tanitja` (`oktato_etr_id`);
+  ADD PRIMARY KEY (`kurzus_id`);
 
 --
 -- Indexes for table `leadas`
 --
 ALTER TABLE `leadas`
-  ADD PRIMARY KEY (`etr_id`,`kurzus_id`),
-  ADD UNIQUE KEY `hallgato_etr_id` (`etr_id`,`kurzus_id`),
-  ADD KEY `leadott_kurzus` (`kurzus_id`);
+  ADD PRIMARY KEY (`etr_id`,`kurzus_id`);
 
 --
 -- Indexes for table `oktato`
@@ -189,32 +182,6 @@ ALTER TABLE `targy`
 --
 ALTER TABLE `terem`
   ADD PRIMARY KEY (`teremszam`);
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `felvetel`
---
-ALTER TABLE `felvetel`
-  ADD CONSTRAINT `felvett_kurzus` FOREIGN KEY (`kurzus_id`) REFERENCES `kurzus` (`kurzus_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `felvevo_hallgato` FOREIGN KEY (`etr_id`) REFERENCES `hallgato` (`hallgato_etr_id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `kurzus`
---
-ALTER TABLE `kurzus`
-  ADD CONSTRAINT `helyszine` FOREIGN KEY (`teremszam`) REFERENCES `terem` (`teremszam`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `kurzusa` FOREIGN KEY (`targykod`) REFERENCES `targy` (`targykod`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `tanitja` FOREIGN KEY (`oktato_etr_id`) REFERENCES `oktato` (`oktato_etr_id`) ON UPDATE CASCADE;
-
---
--- Constraints for table `leadas`
---
-ALTER TABLE `leadas`
-  ADD CONSTRAINT `leado_hallgato` FOREIGN KEY (`etr_id`) REFERENCES `hallgato` (`hallgato_etr_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `leadott_kurzus` FOREIGN KEY (`kurzus_id`) REFERENCES `kurzus` (`kurzus_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
