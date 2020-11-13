@@ -11,10 +11,16 @@ def mysql_get_random_alphanumeric_str(length):
     return ''.join(choices(ascii_letters + digits, k=length))
 
 
-# Establishes connection and returns with connection object
-def mysql_establish_connection(user_arg='root', password_arg='', host_arg='localhost', database_arg='etrdb'):
+# Establishes connection and returns query fetch
+def mysql_iss_coll_query(query, user_arg='root', password_arg='', host_arg='localhost', database_arg='etrdb'):
     try:
-        return mysql.connector.connect(user=user_arg, password=password_arg, host=host_arg, database=database_arg)
+        mlx = mysql.connector.connect(user=user_arg, password=password_arg, host=host_arg, database=database_arg)
+        cursor = mlx.cursor()
+        cursor.execute(query)
+        returnable = cursor.fetchall()
+        cursor.close()
+        return returnable
+    # implement more error handling, for cursor() as well!!!
     except mysql.connector.Error as connection_error:
         if connection_error == mysql_errorcode.ER_ACCESS_DENIED_ERROR:
             print("ERROR:Bad user/password")
@@ -27,11 +33,7 @@ def mysql_establish_connection(user_arg='root', password_arg='', host_arg='local
             return -3
 
 
-# Establishes connection and return with connection object cursor
-def mysql_get_cursor(user_arg='root', password_arg='', host_arg='localhost', database_arg='etrdb'):
-    return mysql_establish_connection(user_arg, password_arg, host_arg, database_arg).cursor()
-
-
+# implement this more generically!!!
 def mysql_query_select(table, columns=None):
     if columns is None:
         columns = ["*"]
@@ -52,19 +54,8 @@ def mysql_query_select(table, columns=None):
 
 
 if __name__ == '__main__':
-    '''
-    # weak reference causes bad functionality, look into it!!!
-    cursor = mysql_get_cursor()
-    query = mysql_query_select("oktato")
-    print(cursor.execute(query))
-    '''
-    query = mysql_query_select("oktato")
-    clx = mysql.connector.connect(user="root", password="", host="localhost", database="etrdb")
-    curs = clx.cursor()
-    curs.execute(query)
-    res = curs.fetchall()
-    print(res)
-    curs.close()
+    print(mysql_iss_coll_query(mysql_query_select("oktato")))
+
     '''
     root = tkinter.Tk()  # TKINTER TOP LEVEL WIDGET
 
@@ -77,6 +68,7 @@ if __name__ == '__main__':
     # SET WINDOW TITLE
     root.title("ETR")
 
+    # use better implementation with columns!!!
     ttk.Label(root, text="probe").place(x=int(calculated_width) // 2, y=int(calculated_height) // 10)
 
 
