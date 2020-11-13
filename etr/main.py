@@ -74,7 +74,7 @@ def mysql_query(query, user_arg='root', password_arg='', host_arg='localhost', d
         returnable = cursor.fetchall()
         cursor.close()
         return returnable
-    # implement more error handling, for cursor() as well!!!
+    # implement more error handling, for the cursor() as well!!!
     except mysql.connector.Error as connection_error:
         if connection_error == mysql_errorcode.ER_ACCESS_DENIED_ERROR:
             print("ERROR:Bad user/password")
@@ -88,7 +88,7 @@ def mysql_query(query, user_arg='root', password_arg='', host_arg='localhost', d
 
 
 # implement this more generically!!!
-def mysql_query_select(table, columns=None, distinct=False):
+def debug_mysql_query_select(table, columns=None, distinct=False):
     if columns is None:
         columns = ["*"]
     base_str = "SELECT"
@@ -110,7 +110,8 @@ def mysql_query_select(table, columns=None, distinct=False):
 
 
 def debug_mysql_fill_dummy_data(records_num):
-    cursor = mysql.connector.connect(user='root', password='', host='localhost', database='etrdb').cursor()
+    mlx = mysql.connector.connect(user='root', password='', host='localhost', database='etrdb')
+    cursor = mlx.cursor()
     # create data for okatato
     oktato_etr_id_list = generator_get_random_alphanumeric_str_list(6, records_num)
     oktato_vezeteknev_list = generator_get_random_name_list(records_num, False)
@@ -135,7 +136,7 @@ def debug_mysql_fill_dummy_data(records_num):
     hallgato_koltsegteritesi_forma_list = generator_get_random_binary_choice_list(records_num, "állami", "önköltséges")
     hallgato_vezeteknev_list = generator_get_random_name_list(records_num, False)
     hallgato_keresztnev_list = generator_get_random_name_list(records_num)
-    hallato_titulus_list = generator_get_random_binary_choice_list(records_num, None, "Dr.")
+    hallgato_titulus_list = generator_get_random_binary_choice_list(records_num, None, "Dr.")
 
     for i in range(records_num):
         # fill table oktato
@@ -143,46 +144,79 @@ def debug_mysql_fill_dummy_data(records_num):
             insertable = (
                 oktato_etr_id_list[i], oktato_vezeteknev_list[i], oktato_keresztnev_list[i], oktato_beosztas_list[i])
             cursor.execute(
-                "INSERT INTO oktato (oktato_etr_id, vezeteknev, keresztnev, beosztas) VALUES (%s, %s, %s, %s)",
+                'INSERT INTO oktato (oktato_etr_id, vezeteknev, keresztnev, beosztas) VALUES (%s, %s, %s, %s)',
                 insertable)
+            cursor.execute('commit')
         else:
             insertable = (
                 oktato_etr_id_list[i], oktato_vezeteknev_list[i], oktato_keresztnev_list[i], oktato_titulus_list[i],
                 oktato_beosztas_list[i])
             cursor.execute(
-                "INSERT INTO oktato (oktato_etr_id, vezeteknev, keresztnev, titulus, beosztas) VALUES (%s, %s, %s, %s, %s)",
+                'INSERT INTO oktato (oktato_etr_id, vezeteknev, keresztnev, titulus, beosztas) VALUES (%s, %s, %s, %s, %s)',
                 insertable)
+            cursor.execute('commit')
 
         # fill table terem
         insertable = (terem_teremszam_list[i], terem_ferohely_list[i], terem_cim_list[i])
-        cursor.execute("INSERT INTO terem (teremszam, ferohely, cim) VALUES (%s, %s, %s)", insertable)
+        cursor.execute('INSERT INTO terem (teremszam, ferohely, cim) VALUES (%s, %s, %s)', insertable)
+        cursor.execute('commit')
 
         # fill table targy
         insertable = (targy_targykod_list[i], targy_ajanlott_felev_list[i], targy_nev_list[i])
-        cursor.execute("INSERT INTO targy (targykod, ajanlott_felev, nev) VALUES (%s, %s, %s)", insertable)
+        cursor.execute('INSERT INTO targy (targykod, ajanlott_felev, nev) VALUES (%s, %s, %s)', insertable)
+        cursor.execute('commit')
 
-        # fill table
-        if hallato_titulus_list[i] is None:
+        # fill table hallgato
+        if hallgato_titulus_list[i] is None:
             insertable = (hallgato_etr_id_list[i], hallgato_lakhely_list[i], hallgato_tagozat_forma_list[i],
                           hallgato_koltsegteritesi_forma_list[i], hallgato_vezeteknev_list[i],
                           hallgato_keresztnev_list[i])
             cursor.execute(
-                "INSERT INTO hallgato (hallgato_etr_id, lakhely, tagozat_forma, koltsegteritesi_forma, vezeteknev, keresztnev) VALUES (%s, %s, %s, %s, %s, %s)",
+                'INSERT INTO hallgato (hallgato_etr_id, lakhely, tagozat_forma, koltsegteritesi_forma, vezeteknev, keresztnev) VALUES (%s, %s, %s, %s, %s, %s)',
                 insertable)
+            cursor.execute('commit')
         else:
             insertable = (hallgato_etr_id_list[i], hallgato_lakhely_list[i], hallgato_tagozat_forma_list[i],
                           hallgato_koltsegteritesi_forma_list[i], hallgato_vezeteknev_list[i],
-                          hallgato_keresztnev_list[i], hallato_titulus_list[i])
+                          hallgato_keresztnev_list[i], hallgato_titulus_list[i])
             cursor.execute(
-                "INSERT INTO hallgato (hallgato_etr_id, lakhely, tagozat_forma, koltsegteritesi_forma, vezeteknev, keresztnev, titulus) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                'INSERT INTO hallgato (hallgato_etr_id, lakhely, tagozat_forma, koltsegteritesi_forma, vezeteknev, keresztnev, titulus) VALUES (%s, %s, %s, %s, %s, %s, %s)',
                 insertable)
+            cursor.execute('commit')
 
     cursor.close()
 
 
+def debug_mysql_delete_table_data(table_name, where_arg=None, user_arg='root', password_arg='', host_arg='localhost',
+                                  database_arg='etrdb'):
+    mlx = mysql.connector.connect(user=user_arg, password=password_arg, host=host_arg,
+                                  database=database_arg)
+    cursor = mlx.cursor()
+    if where_arg is None:
+        cursor.execute('DELETE FROM ' + table_name)
+    else:
+        cursor.execute('DELETE FROM ' + table_name + ' WHERE ' + where_arg)
+    cursor.execute('commit')
+    cursor.close()
+
+
 if __name__ == '__main__':
+    # test for SELECT query
     # print(mysql_query(mysql_query_select("oktato")))
-    debug_mysql_fill_dummy_data(50)
+
+    # test for in-place INSERT INTO query
+    '''
+    mlx = mysql.connector.connect(user='root', password='', host='localhost', database='etrdb')
+    cursor = mlx.cursor()
+    insertable = ("Eq2Rx2", 'Goetz', 'Claire', 'előadó')
+    cursor.execute('INSERT INTO oktato (oktato_etr_id, vezeteknev, keresztnev, beosztas) VALUES (%s, %s, %s, %s)', insertable)
+    cursor.execute('commit')
+    cursor.close()
+    '''
+
+    # test for dummy data fill (INSERT INTO query) and delete
+    # debug_mysql_fill_dummy_data(10)
+    debug_mysql_delete_table_data('oktato')
 
     '''
     root = tkinter.Tk()  # TKINTER TOP LEVEL WIDGET
