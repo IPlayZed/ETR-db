@@ -3,20 +3,21 @@ from string import ascii_letters, digits
 import mysql.connector
 from mysql.connector import errorcode as mysql_errorcode
 from names import get_first_name, get_last_name
+from faker import Faker
 import tkinter
 from tkinter import ttk
 
 
 # Returns an alphanumerical string with the length of <length:int>
-def mysql_get_random_alphanumeric_str(length):
+def generator_get_random_alphanumeric_str(length):
     return ''.join(choices(ascii_letters + digits, k=length))
 
 
-def mysql_get_random_alphanumeric_str_list(str_len, list_len):
+def generator_get_random_alphanumeric_str_list(str_len, list_len):
     generated_list = []
     index = 0
     while index < list_len:
-        item = mysql_get_random_alphanumeric_str(6)
+        item = generator_get_random_alphanumeric_str(6)
         if item in generated_list:
             continue
         else:
@@ -25,7 +26,7 @@ def mysql_get_random_alphanumeric_str_list(str_len, list_len):
     return generated_list
 
 
-def mysql_get_random_name_list(list_len, firstname=True):
+def generator_get_random_name_list(list_len, firstname=True):
     seed()
     generated_list = []
     for i in range(list_len):
@@ -36,28 +37,31 @@ def mysql_get_random_name_list(list_len, firstname=True):
     return generated_list
 
 
-def mysql_get_random_titulus_list(list_len):
-    seed()
+def generator_get_random_binary_choice_list(list_len, likely_choice, unlikely_choice):
     generated_list = []
     for i in range(list_len):
         seed()
         rand_type = randint(0, randint(1, 10))
         if rand_type == 0:
-            generated_list.append("Dr.")
+            generated_list.append(unlikely_choice)
         else:
-            generated_list.append(None)
+            generated_list.append(likely_choice)
     return generated_list
 
 
-def mysql_get_random_beosztas_list(list_len):
+def generator_get_random_int_list(list_len, min_int, max_int):
     generated_list = []
     for i in range(list_len):
         seed()
-        rand_type = randint(0, randint(1, 10))
-        if rand_type == 0:
-            generated_list.append("előadó")
-        else:
-            generated_list.append("demonstrátor")
+        generated_list.append(randint(min_int, randint(min_int, max_int)))
+    return generated_list
+
+
+def generator_get_random_address_list(list_len):
+    generated_list = []
+    fkr = Faker()
+    for i in range(list_len):
+        generated_list.append(fkr.address().strip().replace("\n", " "))
     return generated_list
 
 
@@ -107,19 +111,78 @@ def mysql_query_select(table, columns=None, distinct=False):
 
 def debug_mysql_fill_dummy_data(records_num):
     cursor = mysql.connector.connect(user='root', password='', host='localhost', database='etrdb').cursor()
-    # fill table okatato
-    oktato_etr_id_list = mysql_get_random_alphanumeric_str_list(6, records_num)
-    vezeteknev_list = mysql_get_random_name_list(records_num, False)
-    keresztnev_list = mysql_get_random_name_list(records_num)
-    titulus_list = mysql_get_random_titulus_list(records_num)
-    beosztas_list = mysql_get_random_beosztas_list(records_num)
+    # create data for okatato
+    oktato_etr_id_list = generator_get_random_alphanumeric_str_list(6, records_num)
+    oktato_vezeteknev_list = generator_get_random_name_list(records_num, False)
+    oktato_keresztnev_list = generator_get_random_name_list(records_num)
+    oktato_titulus_list = generator_get_random_binary_choice_list(records_num, None, "Dr.")
+    oktato_beosztas_list = generator_get_random_binary_choice_list(records_num, "gyakorlatvezető", "előadó")
+
+    # create data for terem
+    terem_teremszam_list = generator_get_random_alphanumeric_str_list(6, records_num)
+    terem_ferohely_list = generator_get_random_int_list(records_num, 10, 400)
+    terem_cim_list = generator_get_random_address_list(records_num)
+
+    # create data for targy
+    targy_targykod_list = generator_get_random_address_list(records_num)
+    targy_ajanlott_felev_list = generator_get_random_int_list(records_num, 1, 7)
+    targy_nev_list = generator_get_random_alphanumeric_str_list(10, records_num)
+
+    # create data for hallgato
+    hallgato_etr_id_list = generator_get_random_alphanumeric_str_list(6, records_num)
+    hallgato_lakhely_list = generator_get_random_address_list(records_num)
+    hallgato_tagozat_forma_list = generator_get_random_binary_choice_list(records_num, "normál", "levelező")
+    hallgato_koltsegteritesi_forma_list = generator_get_random_binary_choice_list(records_num, "állami", "önköltséges")
+    hallgato_vezeteknev_list = generator_get_random_name_list(records_num, False)
+    hallgato_keresztnev_list = generator_get_random_name_list(records_num)
+    hallato_titulus_list = generator_get_random_binary_choice_list(records_num, None, "Dr.")
+
+    for i in range(records_num):
+        # fill table oktato
+        if oktato_titulus_list[i] is None:
+            insertable = (
+                oktato_etr_id_list[i], oktato_vezeteknev_list[i], oktato_keresztnev_list[i], oktato_beosztas_list[i])
+            cursor.execute(
+                "INSERT INTO oktato (oktato_etr_id, vezeteknev, keresztnev, beosztas) VALUES (%s, %s, %s, %s)",
+                insertable)
+        else:
+            insertable = (
+                oktato_etr_id_list[i], oktato_vezeteknev_list[i], oktato_keresztnev_list[i], oktato_titulus_list[i],
+                oktato_beosztas_list[i])
+            cursor.execute(
+                "INSERT INTO oktato (oktato_etr_id, vezeteknev, keresztnev, titulus, beosztas) VALUES (%s, %s, %s, %s, %s)",
+                insertable)
+
+        # fill table terem
+        insertable = (terem_teremszam_list[i], terem_ferohely_list[i], terem_cim_list[i])
+        cursor.execute("INSERT INTO terem (teremszam, ferohely, cim) VALUES (%s, %s, %s)", insertable)
+
+        # fill table targy
+        insertable = (targy_targykod_list[i], targy_ajanlott_felev_list[i], targy_nev_list[i])
+        cursor.execute("INSERT INTO targy (targykod, ajanlott_felev, nev) VALUES (%s, %s, %s)", insertable)
+
+        # fill table
+        if hallato_titulus_list[i] is None:
+            insertable = (hallgato_etr_id_list[i], hallgato_lakhely_list[i], hallgato_tagozat_forma_list[i],
+                          hallgato_koltsegteritesi_forma_list[i], hallgato_vezeteknev_list[i],
+                          hallgato_keresztnev_list[i])
+            cursor.execute(
+                "INSERT INTO hallgato (hallgato_etr_id, lakhely, tagozat_forma, koltsegteritesi_forma, vezeteknev, keresztnev) VALUES (%s, %s, %s, %s, %s, %s)",
+                insertable)
+        else:
+            insertable = (hallgato_etr_id_list[i], hallgato_lakhely_list[i], hallgato_tagozat_forma_list[i],
+                          hallgato_koltsegteritesi_forma_list[i], hallgato_vezeteknev_list[i],
+                          hallgato_keresztnev_list[i], hallato_titulus_list[i])
+            cursor.execute(
+                "INSERT INTO hallgato (hallgato_etr_id, lakhely, tagozat_forma, koltsegteritesi_forma, vezeteknev, keresztnev, titulus) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                insertable)
 
     cursor.close()
 
 
 if __name__ == '__main__':
     # print(mysql_query(mysql_query_select("oktato")))
-    debug_mysql_fill_dummy_data(10)
+    debug_mysql_fill_dummy_data(50)
 
     '''
     root = tkinter.Tk()  # TKINTER TOP LEVEL WIDGET
