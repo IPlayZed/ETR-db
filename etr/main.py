@@ -1,9 +1,10 @@
+from random import choices, randint, seed
+from string import ascii_letters, digits
 import mysql.connector
 from mysql.connector import errorcode as mysql_errorcode
+from names import get_first_name, get_last_name
 import tkinter
 from tkinter import ttk
-from random import choices
-from string import ascii_letters, digits
 
 
 # Returns an alphanumerical string with the length of <length:int>
@@ -11,11 +12,60 @@ def mysql_get_random_alphanumeric_str(length):
     return ''.join(choices(ascii_letters + digits, k=length))
 
 
+def mysql_get_random_alphanumeric_str_list(str_len, list_len):
+    generated_list = []
+    index = 0
+    while index < list_len:
+        item = mysql_get_random_alphanumeric_str(6)
+        if item in generated_list:
+            continue
+        else:
+            generated_list.append(item)
+            index += 1
+    return generated_list
+
+
+def mysql_get_random_name_list(list_len, firstname=True):
+    seed()
+    generated_list = []
+    for i in range(list_len):
+        if firstname:
+            generated_list.append(get_first_name())
+        elif not firstname:
+            generated_list.append(get_last_name())
+    return generated_list
+
+
+def mysql_get_random_titulus_list(list_len):
+    seed()
+    generated_list = []
+    for i in range(list_len):
+        seed()
+        rand_type = randint(0, randint(1, 10))
+        if rand_type == 0:
+            generated_list.append("Dr.")
+        else:
+            generated_list.append(None)
+    return generated_list
+
+
+def mysql_get_random_beosztas_list(list_len):
+    generated_list = []
+    for i in range(list_len):
+        seed()
+        rand_type = randint(0, randint(1, 10))
+        if rand_type == 0:
+            generated_list.append("előadó")
+        else:
+            generated_list.append("demonstrátor")
+    return generated_list
+
+
 # Establishes connection and returns query fetch
-def mysql_iss_coll_query(query, user_arg='root', password_arg='', host_arg='localhost', database_arg='etrdb'):
+def mysql_query(query, user_arg='root', password_arg='', host_arg='localhost', database_arg='etrdb'):
     try:
-        mlx = mysql.connector.connect(user=user_arg, password=password_arg, host=host_arg, database=database_arg)
-        cursor = mlx.cursor()
+        cursor = mysql.connector.connect(user=user_arg, password=password_arg, host=host_arg,
+                                         database=database_arg).cursor()
         cursor.execute(query)
         returnable = cursor.fetchall()
         cursor.close()
@@ -34,10 +84,12 @@ def mysql_iss_coll_query(query, user_arg='root', password_arg='', host_arg='loca
 
 
 # implement this more generically!!!
-def mysql_query_select(table, columns=None):
+def mysql_query_select(table, columns=None, distinct=False):
     if columns is None:
         columns = ["*"]
     base_str = "SELECT"
+    if distinct:
+        base_str += " DISTINCT"
     if columns == ["*"] or len(columns) == 0:
         base_str += " * "
     else:
@@ -53,8 +105,21 @@ def mysql_query_select(table, columns=None):
     return base_str
 
 
+def debug_mysql_fill_dummy_data(records_num):
+    cursor = mysql.connector.connect(user='root', password='', host='localhost', database='etrdb').cursor()
+    # fill table okatato
+    oktato_etr_id_list = mysql_get_random_alphanumeric_str_list(6, records_num)
+    vezeteknev_list = mysql_get_random_name_list(records_num, False)
+    keresztnev_list = mysql_get_random_name_list(records_num)
+    titulus_list = mysql_get_random_titulus_list(records_num)
+    beosztas_list = mysql_get_random_beosztas_list(records_num)
+
+    cursor.close()
+
+
 if __name__ == '__main__':
-    print(mysql_iss_coll_query(mysql_query_select("oktato")))
+    # print(mysql_query(mysql_query_select("oktato")))
+    debug_mysql_fill_dummy_data(10)
 
     '''
     root = tkinter.Tk()  # TKINTER TOP LEVEL WIDGET
