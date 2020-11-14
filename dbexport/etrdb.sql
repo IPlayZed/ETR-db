@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Nov 13, 2020 at 09:37 PM
+-- Generation Time: Nov 14, 2020 at 04:45 PM
 -- Server version: 10.4.14-MariaDB
 -- PHP Version: 7.4.11
 
@@ -139,7 +139,9 @@ CREATE TABLE `terem` (
 -- Indexes for table `felvetel`
 --
 ALTER TABLE `felvetel`
-  ADD PRIMARY KEY (`etr_id`,`kurzus_id`);
+  ADD PRIMARY KEY (`etr_id`,`kurzus_id`),
+  ADD UNIQUE KEY `etr_id` (`etr_id`,`kurzus_id`),
+  ADD KEY `felvett_kurzus` (`kurzus_id`);
 
 --
 -- Indexes for table `gepterem`
@@ -157,13 +159,18 @@ ALTER TABLE `hallgato`
 -- Indexes for table `kurzus`
 --
 ALTER TABLE `kurzus`
-  ADD PRIMARY KEY (`kurzus_id`);
+  ADD PRIMARY KEY (`kurzus_id`),
+  ADD KEY `tanitja` (`oktato_etr_id`),
+  ADD KEY `kurzusa` (`targykod`),
+  ADD KEY `helyszine` (`teremszam`);
 
 --
 -- Indexes for table `leadas`
 --
 ALTER TABLE `leadas`
-  ADD PRIMARY KEY (`etr_id`,`kurzus_id`);
+  ADD PRIMARY KEY (`etr_id`,`kurzus_id`),
+  ADD UNIQUE KEY `etr_id` (`etr_id`,`kurzus_id`),
+  ADD KEY `leadott_kurzus` (`kurzus_id`);
 
 --
 -- Indexes for table `oktato`
@@ -182,6 +189,38 @@ ALTER TABLE `targy`
 --
 ALTER TABLE `terem`
   ADD PRIMARY KEY (`teremszam`);
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `felvetel`
+--
+ALTER TABLE `felvetel`
+  ADD CONSTRAINT `felvett_kurzus` FOREIGN KEY (`kurzus_id`) REFERENCES `kurzus` (`kurzus_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `felvevo_hallgato` FOREIGN KEY (`etr_id`) REFERENCES `hallgato` (`hallgato_etr_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `gepterem`
+--
+ALTER TABLE `gepterem`
+  ADD CONSTRAINT `parent` FOREIGN KEY (`teremszam`) REFERENCES `terem` (`teremszam`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `kurzus`
+--
+ALTER TABLE `kurzus`
+  ADD CONSTRAINT `helyszine` FOREIGN KEY (`teremszam`) REFERENCES `terem` (`teremszam`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `kurzusa` FOREIGN KEY (`targykod`) REFERENCES `targy` (`targykod`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `tanitja` FOREIGN KEY (`oktato_etr_id`) REFERENCES `oktato` (`oktato_etr_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `leadas`
+--
+ALTER TABLE `leadas`
+  ADD CONSTRAINT `leado_hallgato` FOREIGN KEY (`etr_id`) REFERENCES `hallgato` (`hallgato_etr_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `leadott_kurzus` FOREIGN KEY (`kurzus_id`) REFERENCES `kurzus` (`kurzus_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -219,7 +219,7 @@ if __name__ == '__main__':
     root.title("ETR")
 
     # use better implementation with columns!!!
-    ttk.Label(root, text="probe").place(x=int(calculated_width) // 2, y=int(calculated_height) // 10)
+    ttk.Label(root, text="probe").place(x=int(calculated_width) // 2, y=int(calculated_height) /sudo/ 10)
 
 
     root.mainloop()
