@@ -6,6 +6,7 @@ from names import get_first_name, get_last_name
 from faker import Faker
 import tkinter
 from tkinter import *
+from tkinter import messagebox
 from tkinter import ttk
 
 
@@ -82,7 +83,7 @@ def generator_concatenate_sql_params(str_list):
 def mysql_query(query, user_arg='root', password_arg='', host_arg='localhost', database_arg='etrdb'):
     try:
         clx = mysql.connector.connect(user=user_arg, password=password_arg, host=host_arg,
-                                         database=database_arg)
+                                      database=database_arg)
         cursor = clx.cursor()
         cursor.execute(query)
         returnable = cursor.fetchall()
@@ -103,30 +104,23 @@ def mysql_query(query, user_arg='root', password_arg='', host_arg='localhost', d
 
 # implement this more generically!!!
 def debug_mysql_query_select(table, columns=None, distinct=False):
-    if columns is None:
-        columns = ["*"]
-    base_str = "SELECT"
-    if distinct:
-        base_str += " DISTINCT"
-    if columns == ["*"] or len(columns) == 0:
-        base_str += " * "
+    if len(table) == 0:
+        return -1
     else:
-        # generator_concatenate_sql_params(table)
+        if columns is None:
+            columns = ["*"]
+        base_str = "SELECT"
+        if distinct:
+            base_str += " DISTINCT"
+        if columns == ["*"] or len(columns) == 0:
+            base_str += " * "
 
-        index = 1
-        length = len(columns)
-        for column in columns:
-            if index != length:
-                base_str += (" " + column + ",")
-            else:
-                base_str += (" " + column + " ")
-            index += 1
-
-    base_str += ("FROM " + table)
-    return base_str
+        concatenable = generator_concatenate_sql_params(table)
+        base_str += ("FROM " + concatenable)
+        return base_str
 
 
-def debug_mysql_fill_dummy_data(records_num):
+def debug_mysql_fill_dummy_data(records_num=100):
     # ALWAYS make sure to open a new connection
 
     # create data for okatato
@@ -231,21 +225,42 @@ def debug_mysql_delete_table_data(table_name, where_arg=None, force_truncate=Fal
     return 0
 
 
-def admin_window():
+def gui_admin_window():
+    def gui_call_debug_mysql_fill_dummy_data():
+        # TODO: add more case handling for input string
+        if dummy_fill_entry.get() == '':
+            tkinter.messagebox.showwarning('Warning', 'Entry must be filled!')
+        else:
+            debug_mysql_fill_dummy_data(int(dummy_fill_entry.get()))
+            tkinter.messagebox.showinfo('Info', 'Successful data generation and input!')
+
     admin_window_root = Toplevel()
     admin_window_root.title("Admin functionalities")
+    scr_w_admin = str(admin_window_root.winfo_screenwidth() // 3)
+    scr_h_admin = str(admin_window_root.winfo_screenheight() // 3)
+    admin_window_root.geometry(scr_w_admin + 'x' + scr_h_admin)
     main_frame = ttk.Frame(admin_window_root, width=scr_w, height=scr_h)
     main_frame.grid(row=0, column=0)
+    admin_window_root.columnconfigure(0, weight=1)
+    admin_window_root.rowconfigure(0, weight=1)
+    title_label = ttk.Label(main_frame, text="Admin functions, only for debugging!")
+    dummy_fill_entry = ttk.Entry(admin_window_root)
+
+    dummy_fill_button = ttk.Button(admin_window_root, text="Fill with random dummy info",
+                                   command=gui_call_debug_mysql_fill_dummy_data)
+    title_label.grid(row=0, column=0)
+    dummy_fill_entry.grid(row=1, column=2)
+    dummy_fill_button.grid(row=1, column=0)
 
 
-def home_window(root):
+def gui_home_window(root):
     root.title("ETR-DB")
     main_frame = ttk.Frame(root, width=scr_w, height=scr_h)
     main_frame.grid(row=0, column=0)
     root.columnconfigure(0, weight=1)  # resize columns when window is resized
     root.rowconfigure(0, weight=1)  # resize rows when window is resized
     title_label = ttk.Label(main_frame, text="Home")
-    admin_button = ttk.Button(main_frame, text="Admin functions", command=admin_window)
+    admin_button = ttk.Button(main_frame, text="Admin functions", command=gui_admin_window)
     user_button = ttk.Button(main_frame, text="Make queries")
     title_label.grid(row=0, column=0)
     admin_button.grid(row=1, column=0)
@@ -260,6 +275,7 @@ if __name__ == '__main__':
     scr_h = str(root_widget.winfo_screenheight() // 2)
     root_widget.geometry(scr_w + 'x' + scr_h)
     root_widget.attributes('-fullscreen', 0)
-    home_window(root=root_widget)
+    gui_home_window(root=root_widget)
+    debug_mysql_query_select([])
     root_widget.mainloop()
     root_widget.destroy()
