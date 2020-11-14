@@ -81,8 +81,9 @@ def generator_concatenate_sql_params(str_list):
 # Establishes connection and returns query fetch
 def mysql_query(query, user_arg='root', password_arg='', host_arg='localhost', database_arg='etrdb'):
     try:
-        cursor = mysql.connector.connect(user=user_arg, password=password_arg, host=host_arg,
-                                         database=database_arg).cursor()
+        clx = mysql.connector.connect(user=user_arg, password=password_arg, host=host_arg,
+                                         database=database_arg)
+        cursor = clx.cursor()
         cursor.execute(query)
         returnable = cursor.fetchall()
         cursor.close()
