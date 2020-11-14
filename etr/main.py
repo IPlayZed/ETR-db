@@ -5,6 +5,7 @@ from mysql.connector import errorcode as mysql_errorcode
 from names import get_first_name, get_last_name
 from faker import Faker
 import tkinter
+from tkinter import *
 from tkinter import ttk
 
 
@@ -17,7 +18,7 @@ def generator_get_random_alphanumeric_str_list(str_len, list_len):
     generated_list = []
     index = 0
     while index < list_len:
-        item = generator_get_random_alphanumeric_str(6)
+        item = generator_get_random_alphanumeric_str(str_len)
         if item in generated_list:
             continue
         else:
@@ -65,6 +66,18 @@ def generator_get_random_address_list(list_len):
     return generated_list
 
 
+def generator_concatenate_sql_params(str_list):
+    index = 1
+    returnable_str = ''
+    for string in str_list:
+        if index != len(str_list):
+            returnable_str += (' ' + string + ', ')
+        else:
+            returnable_str += (' ' + string + ' ')
+        index += 1
+    return returnable_str
+
+
 # Establishes connection and returns query fetch
 def mysql_query(query, user_arg='root', password_arg='', host_arg='localhost', database_arg='etrdb'):
     try:
@@ -97,6 +110,8 @@ def debug_mysql_query_select(table, columns=None, distinct=False):
     if columns == ["*"] or len(columns) == 0:
         base_str += " * "
     else:
+        # generator_concatenate_sql_params(table)
+
         index = 1
         length = len(columns)
         for column in columns:
@@ -105,6 +120,7 @@ def debug_mysql_query_select(table, columns=None, distinct=False):
             else:
                 base_str += (" " + column + " ")
             index += 1
+
     base_str += ("FROM " + table)
     return base_str
 
@@ -191,36 +207,47 @@ def debug_mysql_fill_dummy_data(records_num):
         con.close()
 
 
-def debug_mysql_delete_table_data(table_name, where_arg=None, user_arg='root', password_arg='', host_arg='localhost',
+def debug_mysql_delete_table_data(table_name, where_arg=None, force_truncate=False, user_arg='root', password_arg='',
+                                  host_arg='localhost',
                                   database_arg='etrdb'):
     mlx = mysql.connector.connect(user=user_arg, password=password_arg, host=host_arg,
                                   database=database_arg)
     cursor = mlx.cursor()
+    if force_truncate is True:
+        if len(table_name) != 1:
+            mlx.close()
+            return "ERROR: Can only truncate one table in a call!"
+        cursor.execute('SET FOREIGN_KEY_CHECKS = 0')
+        mlx.commit()
+        cursor.execute('TRUNCATE table ' + table_name)
+
     if where_arg is None:
         cursor.execute('DELETE FROM ' + table_name)
     else:
         cursor.execute('DELETE FROM ' + table_name + ' WHERE ' + where_arg)
     cursor.execute('commit')
-    cursor.close()
+    mlx.close()
+    return 0
+
+
+class HomeWindow:
+    def __init__(self, root):
+        root.title("ETR-DB")
+        scr_w = root.winfo_screenwidth() // 2
+        scr_h = root.winfo_screenheight() // 2
+        main_frame = ttk.Frame(root, width=scr_w, height=scr_h)
+        main_frame.grid(row=0, column=0)
+        title_label = ttk.Label(main_frame, text="Home")
+        admin_button = ttk.Button(main_frame, text="Admin functions")
+        user_button = ttk.Button(main_frame, text="Make queries")
+        title_label.grid(row=0, column=0)
+        admin_button.grid(row=1, column=0)
+        user_button.grid(row=1, column=3)
 
 
 if __name__ == '__main__':
+    # debug_mysql_fill_dummy_data(12000)
 
-    '''
-    root = tkinter.Tk()  # TKINTER TOP LEVEL WIDGET
-
-    # GET SCREEN DIMENSIONS
-    calculated_width = str(root.winfo_screenwidth() // 2)
-    calculated_height = str(root.winfo_screenheight() // 2)
-
-    # SET THE SCREEN DIMENSIONS
-    root.geometry(calculated_width + "x" + calculated_height)
-    # SET WINDOW TITLE
-    root.title("ETR")
-
-    # use better implementation with columns!!!
-    ttk.Label(root, text="probe").place(x=int(calculated_width) // 2, y=int(calculated_height) /sudo/ 10)
-
-
-    root.mainloop()
-    '''
+    root_widget = tkinter.Tk()
+    home = HomeWindow(root_widget)
+    root_widget.mainloop()
