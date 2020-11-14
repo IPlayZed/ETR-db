@@ -230,24 +230,35 @@ def debug_mysql_delete_table_data(table_name, where_arg=None, force_truncate=Fal
     return 0
 
 
-class HomeWindow:
-    def __init__(self, root):
-        root.title("ETR-DB")
-        scr_w = root.winfo_screenwidth() // 2
-        scr_h = root.winfo_screenheight() // 2
-        main_frame = ttk.Frame(root, width=scr_w, height=scr_h)
-        main_frame.grid(row=0, column=0)
-        title_label = ttk.Label(main_frame, text="Home")
-        admin_button = ttk.Button(main_frame, text="Admin functions")
-        user_button = ttk.Button(main_frame, text="Make queries")
-        title_label.grid(row=0, column=0)
-        admin_button.grid(row=1, column=0)
-        user_button.grid(row=1, column=3)
+def admin_window():
+    admin_window_root = Toplevel()
+    admin_window_root.title("Admin functionalities")
+    main_frame = ttk.Frame(admin_window_root, width=scr_w, height=scr_h)
+    main_frame.grid(row=0, column=0)
+
+
+def home_window(root):
+    root.title("ETR-DB")
+    main_frame = ttk.Frame(root, width=scr_w, height=scr_h)
+    main_frame.grid(row=0, column=0)
+    root.columnconfigure(0, weight=1)  # resize columns when window is resized
+    root.rowconfigure(0, weight=1)  # resize rows when window is resized
+    title_label = ttk.Label(main_frame, text="Home")
+    admin_button = ttk.Button(main_frame, text="Admin functions", command=admin_window)
+    user_button = ttk.Button(main_frame, text="Make queries")
+    title_label.grid(row=0, column=0)
+    admin_button.grid(row=1, column=0)
+    user_button.grid(row=2, column=0)
 
 
 if __name__ == '__main__':
     # debug_mysql_fill_dummy_data(12000)
 
     root_widget = tkinter.Tk()
-    home = HomeWindow(root_widget)
+    scr_w = str(root_widget.winfo_screenwidth() // 2)
+    scr_h = str(root_widget.winfo_screenheight() // 2)
+    root_widget.geometry(scr_w + 'x' + scr_h)
+    root_widget.attributes('-fullscreen', 0)
+    home_window(root=root_widget)
     root_widget.mainloop()
+    root_widget.destroy()
