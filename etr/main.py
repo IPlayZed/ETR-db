@@ -9,6 +9,7 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
 from PIL import ImageTk, Image
+___DEBUG_MODE___ = True
 
 
 # Returns an alphanumerical string with the length of <length:int>
@@ -88,7 +89,7 @@ def mysql_query(query, user_arg='root', password_arg='', host_arg='localhost', d
         cursor = clx.cursor()
         cursor.execute(query)
         returnable = cursor.fetchall()
-        cursor.close()
+        clx.close()
         return returnable
     # implement more error handling, for the cursor() as well!!!
     except mysql.connector.Error as connection_error:
@@ -236,7 +237,74 @@ def debug_is_int(string):
         return False
 
 
-def gui_admin_window():
+def gui_normal_window(root):
+    # functionality lambdas
+    def list_db(root):
+        pass
+
+    def insert(root):
+        pass
+
+    def modify(root):
+        pass
+
+    def delete(root):
+        pass
+
+    # root setup
+    normal_window_root = tkinter.Toplevel()
+    normal_window_root.title("SQL queries")
+    scr_w_normal = str(root.winfo_screenwidth() // 2)
+    scr_h_normal = str(root.winfo_screenheight() // 2)
+    normal_window_root.geometry(scr_h_normal + 'x' + scr_h_normal)
+    normal_window_root.columnconfigure(0, weight=1)
+    normal_window_root.rowconfigure(0, weight=1)
+
+    # basic widgets setup
+    main_frame = ttk.Frame(normal_window_root)
+    list_db_button = ttk.Button(main_frame, text='List records from tables',
+                                command=lambda: list_db(root=normal_window_root))
+    insert_db_button = ttk.Button(main_frame, text='Insert record into table',
+                                  command=lambda: insert(root=normal_window_root))
+    modify_db_button = ttk.Button(main_frame, text='Modify (update) record in table',
+                                  command=lambda: modify(root=normal_window_root))
+    delete_db_button = ttk.Button(main_frame, text='Delete record from database',
+                                  command=lambda: delete(root=normal_window_root))
+
+    # radio button widgets setup
+    radio_b_l_frame = ttk.Labelframe(main_frame, text='Choosable tables')
+    chosen_table = tkinter.StringVar()
+    chosen_table.set('oktato')
+    radio_b_modes = [
+        ('table: \'oktato\'', 'oktato'),
+        ('table: \'hallgato\'', 'hallgato'),
+        ('table: \'targy\'', 'targy'),
+        ('table: \'terem\'', 'terem'),
+    ]
+
+    def radio_b_clicked(val):
+        # TODO: find out why does this F up my code if I leave it in it
+        # chosen_table.set(value=val)
+        if ___DEBUG_MODE___ is True:
+            print(chosen_table.get())
+
+    # normal widgets rendering
+    main_frame.grid(row=0, column=0)
+    radio_b_l_frame.grid(row=0, column=0, rowspan=4, padx=10)
+    list_db_button.grid(row=0, column=1, pady=10)
+    insert_db_button.grid(row=1, column=1, pady=10)
+    modify_db_button.grid(row=2, column=1, pady=10)
+    delete_db_button.grid(row=3, column=1, pady=10)
+
+    # radio buttons rendering
+    for rad_b_l_txt, rad_b_l_val in radio_b_modes:
+        Radiobutton(radio_b_l_frame, text=rad_b_l_txt, variable=chosen_table, value=rad_b_l_val,
+                    command=lambda: radio_b_clicked(rad_b_l_val)).pack(anchor=W)
+        if ___DEBUG_MODE___ is True:
+            print('text:\"' + rad_b_l_txt + '\", value:\"' + rad_b_l_val + '\"')
+
+
+def gui_admin_window(root):
     # if param is needed to call these functions, could use lambdas to call them and pass params to them in command
     def gui_call_debug_mysql_fill_dummy_data():
         # TODO: handle called debug function record code.
@@ -261,12 +329,12 @@ def gui_admin_window():
             tkinter.messagebox.showwarning('Warning', 'Something went wrong!')
         admin_window_root.destroy()
 
-    admin_window_root = Toplevel()
+    admin_window_root = tkinter.Toplevel()
     admin_window_root.title("Admin functionalities")
-    scr_w_admin = str(admin_window_root.winfo_screenwidth() // 3)
-    scr_h_admin = str(admin_window_root.winfo_screenheight() // 3)
+    scr_w_admin = str(root.winfo_screenwidth() // 3)
+    scr_h_admin = str(root.winfo_screenheight() // 3)
     admin_window_root.geometry(scr_w_admin + 'x' + scr_h_admin)
-    main_frame = ttk.Frame(admin_window_root, width=scr_w, height=scr_h)
+    main_frame = ttk.Frame(admin_window_root)
     main_frame.grid(row=0, column=0)
     admin_window_root.columnconfigure(0, weight=1)
     admin_window_root.rowconfigure(0, weight=1)
@@ -289,16 +357,16 @@ def gui_home_window(root):
     main_frame.grid(row=0, column=0)
     root.columnconfigure(0, weight=1)  # resize columns when window is resized
     root.rowconfigure(0, weight=1)  # resize rows when window is resized
+
     title_label = ttk.Label(main_frame, text="Home")
-    admin_button = ttk.Button(main_frame, text="Admin functions", command=gui_admin_window)
-    user_button = ttk.Button(main_frame, text="Make queries")
+    admin_button = ttk.Button(main_frame, text="Admin functions", command=lambda: gui_admin_window(root=root))
+    user_button = ttk.Button(main_frame, text="Make queries", command=lambda: gui_normal_window(root=root))
     title_label.grid(row=0, column=0)
     admin_button.grid(row=1, column=0)
     user_button.grid(row=2, column=0)
 
 
 if __name__ == '__main__':
-    print(debug_mysql_query_select(table='oktato', columns=['alma', 'répa'], distinct=True))
     root_widget = tkinter.Tk()
     scr_w = str(root_widget.winfo_screenwidth() // 2)
     scr_h = str(root_widget.winfo_screenheight() // 2)
