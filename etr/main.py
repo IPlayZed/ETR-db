@@ -8,6 +8,7 @@ import tkinter
 from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
+from PIL import ImageTk, Image
 
 
 # Returns an alphanumerical string with the length of <length:int>
@@ -103,21 +104,20 @@ def mysql_query(query, user_arg='root', password_arg='', host_arg='localhost', d
 
 
 # implement this more generically!!!
-def debug_mysql_query_select(table, columns=None, distinct=False):
-    if len(table) == 0:
-        return -1
+def debug_mysql_query_select(table, columns=None, distinct=False, where=None):
+    if columns is None:
+        columns = ['*']
+    base_str = 'SELECT'
+    if distinct:
+        base_str += ' DISTINCT'
+    if columns == ['*'] or len(columns) == 0:
+        base_str += ' * '
     else:
-        if columns is None:
-            columns = ["*"]
-        base_str = "SELECT"
-        if distinct:
-            base_str += " DISTINCT"
-        if columns == ["*"] or len(columns) == 0:
-            base_str += " * "
-
-        concatenable = generator_concatenate_sql_params(table)
-        base_str += ("FROM " + concatenable)
-        return base_str
+        base_str += generator_concatenate_sql_params(columns)
+    base_str += ('FROM ' + table)
+    if where is not None:
+        pass
+    return base_str
 
 
 def debug_mysql_fill_dummy_data(records_num=100):
@@ -247,6 +247,8 @@ def gui_admin_window():
         else:
             debug_mysql_fill_dummy_data(int(dummy_fill_entry.get()))
             tkinter.messagebox.showinfo('Info', 'Successful creation and insertion!')
+        dummy_fill_entry.delete(0, END)
+        admin_window_root.destroy()
 
     def gui_call_debug_mysql_truncate_all_tables():
         tables = ['felvetel', 'gepterem', 'hallgato', 'kurzus', 'leadas', 'oktato', 'targy', 'terem']
@@ -257,6 +259,7 @@ def gui_admin_window():
             tkinter.messagebox.showinfo('Info', 'Successful data deletion!')
         else:
             tkinter.messagebox.showwarning('Warning', 'Something went wrong!')
+        admin_window_root.destroy()
 
     admin_window_root = Toplevel()
     admin_window_root.title("Admin functionalities")
@@ -295,13 +298,13 @@ def gui_home_window(root):
 
 
 if __name__ == '__main__':
-    # debug_mysql_fill_dummy_data(12000)
+    print(debug_mysql_query_select(table='oktato', columns=['alma', 'répa'], distinct=True))
     root_widget = tkinter.Tk()
     scr_w = str(root_widget.winfo_screenwidth() // 2)
     scr_h = str(root_widget.winfo_screenheight() // 2)
     root_widget.geometry(scr_w + 'x' + scr_h)
     root_widget.attributes('-fullscreen', 0)
+    # root_widget.iconbitmap('icon.ico')
     gui_home_window(root=root_widget)
-    debug_mysql_query_select([])
     root_widget.mainloop()
     root_widget.destroy()
