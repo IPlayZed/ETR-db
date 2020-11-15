@@ -1,4 +1,3 @@
-from types import *
 from random import choices, randint, seed
 from string import ascii_letters, digits
 import mysql.connector
