@@ -256,7 +256,7 @@ def gui_normal_window(root):
     normal_window_root.title("SQL queries")
     scr_w_normal = str(root.winfo_screenwidth() // 2)
     scr_h_normal = str(root.winfo_screenheight() // 2)
-    normal_window_root.geometry(scr_h_normal + 'x' + scr_h_normal)
+    normal_window_root.geometry(scr_w_normal + 'x' + scr_h_normal)
     normal_window_root.columnconfigure(0, weight=1)
     normal_window_root.rowconfigure(0, weight=1)
 
