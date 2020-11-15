@@ -1,3 +1,4 @@
+from types import *
 from random import choices, randint, seed
 from string import ascii_letters, digits
 import mysql.connector
@@ -208,31 +209,54 @@ def debug_mysql_delete_table_data(table_name, where_arg=None, force_truncate=Fal
     mlx = mysql.connector.connect(user=user_arg, password=password_arg, host=host_arg,
                                   database=database_arg)
     cursor = mlx.cursor()
-    if force_truncate is True:
-        if len(table_name) != 1:
-            mlx.close()
-            return "ERROR: Can only truncate one table in a call!"
-        cursor.execute('SET FOREIGN_KEY_CHECKS = 0')
-        mlx.commit()
-        cursor.execute('TRUNCATE table ' + table_name)
-
-    if where_arg is None:
-        cursor.execute('DELETE FROM ' + table_name)
+    if isinstance(table_name, str):
+        if force_truncate is True:
+            cursor.execute('SET FOREIGN_KEY_CHECKS = 0')
+            mlx.commit()
+            cursor.execute('TRUNCATE table ' + table_name)
+            mlx.commit()
+            cursor.execute('SET FOREIGN_KEY_CHECKS = 1')
+            mlx.commit()
+        if where_arg is None:
+            cursor.execute('DELETE FROM ' + table_name)
+        else:
+            cursor.execute('DELETE FROM ' + table_name + ' WHERE ' + where_arg)
+        cursor.execute('commit')
+        mlx.close()
     else:
-        cursor.execute('DELETE FROM ' + table_name + ' WHERE ' + where_arg)
-    cursor.execute('commit')
-    mlx.close()
+        print("\'table_name\' can only be of type str")
+        return -1
     return 0
+
+
+def debug_is_int(string):
+    try:
+        int(string)
+        return True
+    except ValueError:
+        return False
 
 
 def gui_admin_window():
     def gui_call_debug_mysql_fill_dummy_data():
-        # TODO: add more case handling for input string
+        # TODO: handle called debug function record code.
         if dummy_fill_entry.get() == '':
             tkinter.messagebox.showwarning('Warning', 'Entry must be filled!')
+        elif debug_is_int(dummy_fill_entry.get()) is False:
+            tkinter.messagebox.showwarning('Warning', 'Entry must be an integer!')
         else:
             debug_mysql_fill_dummy_data(int(dummy_fill_entry.get()))
-            tkinter.messagebox.showinfo('Info', 'Successful data generation and input!')
+            tkinter.messagebox.showinfo('Info', 'Successful creation and insertion!')
+
+    def gui_call_debug_mysql_truncate_all_tables():
+        tables = ['felvetel', 'gepterem', 'hallgato', 'kurzus', 'leadas', 'oktato', 'targy', 'terem']
+        func_ret_code = None
+        for table in tables:
+            func_ret_code = debug_mysql_delete_table_data(table_name=table, force_truncate=True)
+        if func_ret_code == 0:
+            tkinter.messagebox.showinfo('Info', 'Successful data deletion!')
+        else:
+            tkinter.messagebox.showwarning('Warning', 'Something went wrong!')
 
     admin_window_root = Toplevel()
     admin_window_root.title("Admin functionalities")
@@ -248,9 +272,12 @@ def gui_admin_window():
 
     dummy_fill_button = ttk.Button(admin_window_root, text="Fill with random dummy info",
                                    command=gui_call_debug_mysql_fill_dummy_data)
+    truncate_tables_button = ttk.Button(admin_window_root, text="Truncate all tables",
+                                        command=gui_call_debug_mysql_truncate_all_tables)
     title_label.grid(row=0, column=0)
-    dummy_fill_entry.grid(row=1, column=2)
+    dummy_fill_entry.grid(row=1, column=1)
     dummy_fill_button.grid(row=1, column=0)
+    truncate_tables_button.grid(row=2, column=0)
 
 
 def gui_home_window(root):
@@ -269,7 +296,6 @@ def gui_home_window(root):
 
 if __name__ == '__main__':
     # debug_mysql_fill_dummy_data(12000)
-
     root_widget = tkinter.Tk()
     scr_w = str(root_widget.winfo_screenwidth() // 2)
     scr_h = str(root_widget.winfo_screenheight() // 2)
