@@ -237,6 +237,7 @@ def debug_is_int(string):
 
 
 def gui_admin_window():
+    # if param is needed to call these functions, could use lambdas to call them and pass params to them in command
     def gui_call_debug_mysql_fill_dummy_data():
         # TODO: handle called debug function record code.
         if dummy_fill_entry.get() == '':
@@ -267,14 +268,14 @@ def gui_admin_window():
     admin_window_root.columnconfigure(0, weight=1)
     admin_window_root.rowconfigure(0, weight=1)
     title_label = ttk.Label(main_frame, text="Admin functions, only for debugging!")
-    dummy_fill_entry = ttk.Entry(admin_window_root)
+    dummy_fill_entry = ttk.Entry(main_frame)
 
-    dummy_fill_button = ttk.Button(admin_window_root, text="Fill with random dummy info",
+    dummy_fill_button = ttk.Button(main_frame, text="Fill with random dummy info",
                                    command=gui_call_debug_mysql_fill_dummy_data)
-    truncate_tables_button = ttk.Button(admin_window_root, text="Truncate all tables",
+    truncate_tables_button = ttk.Button(main_frame, text="Truncate all tables",
                                         command=gui_call_debug_mysql_truncate_all_tables)
-    title_label.grid(row=0, column=0)
-    dummy_fill_entry.grid(row=1, column=1)
+    title_label.grid(row=0, column=0, columnspan=2, pady=10)
+    dummy_fill_entry.grid(row=1, column=1, padx=10, pady=5)
     dummy_fill_button.grid(row=1, column=0)
     truncate_tables_button.grid(row=2, column=0)
 
