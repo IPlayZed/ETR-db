@@ -9,6 +9,7 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
 from PIL import ImageTk, Image
+
 ___DEBUG_MODE___ = True
 
 
@@ -239,16 +240,21 @@ def debug_is_int(string):
 
 def gui_normal_window(root):
     # functionality lambdas
-    def list_db(root):
+    # TODO: implement GUI formatted listing and graphing
+    def list_db(root_arg, chosen_table_arg):
+        query_res = mysql_query(debug_mysql_query_select(table=chosen_table_arg))
+        if ___DEBUG_MODE___ is True:
+            print('chosen_table_arg: ' + chosen_table_arg)
+            # TODO: implement a function for parsing query result
+            print('query_res: ' + str(query_res))
+
+    def insert(root_arg, chosen_table_arg):
         pass
 
-    def insert(root):
+    def modify(root_arg, chosen_table_arg):
         pass
 
-    def modify(root):
-        pass
-
-    def delete(root):
+    def delete(root_arg, chosen_table_arg):
         pass
 
     # root setup
@@ -263,13 +269,17 @@ def gui_normal_window(root):
     # basic widgets setup
     main_frame = ttk.Frame(normal_window_root)
     list_db_button = ttk.Button(main_frame, text='List records from tables',
-                                command=lambda: list_db(root=normal_window_root))
+                                command=lambda: list_db(root_arg=normal_window_root,
+                                                        chosen_table_arg=chosen_table.get()))
     insert_db_button = ttk.Button(main_frame, text='Insert record into table',
-                                  command=lambda: insert(root=normal_window_root))
+                                  command=lambda: insert(root_arg=normal_window_root,
+                                                         chosen_table_arg=chosen_table.get()))
     modify_db_button = ttk.Button(main_frame, text='Modify (update) record in table',
-                                  command=lambda: modify(root=normal_window_root))
+                                  command=lambda: modify(root_arg=normal_window_root,
+                                                         chosen_table_arg=chosen_table.get()))
     delete_db_button = ttk.Button(main_frame, text='Delete record from database',
-                                  command=lambda: delete(root=normal_window_root))
+                                  command=lambda: delete(root_arg=normal_window_root,
+                                                         chosen_table_arg=chosen_table.get()))
 
     # radio button widgets setup
     radio_b_l_frame = ttk.Labelframe(main_frame, text='Choosable tables')
@@ -361,9 +371,9 @@ def gui_home_window(root):
     title_label = ttk.Label(main_frame, text="Home")
     admin_button = ttk.Button(main_frame, text="Admin functions", command=lambda: gui_admin_window(root=root))
     user_button = ttk.Button(main_frame, text="Make queries", command=lambda: gui_normal_window(root=root))
-    title_label.grid(row=0, column=0)
-    admin_button.grid(row=1, column=0)
-    user_button.grid(row=2, column=0)
+    title_label.grid(row=0, column=0, pady=10, sticky=N)
+    admin_button.grid(row=1, column=0, pady=5)
+    user_button.grid(row=2, column=0, pady=5)
 
 
 if __name__ == '__main__':
