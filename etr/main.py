@@ -269,42 +269,84 @@ def gui_normal_window(root):
     # functionality lambdas
     # TODO: implement GUI formatted listing and graphing
     def list_db(root_arg, chosen_table_arg):
+        # get the result of query in a list of tuples and meta
         query_res = mysql_query(debug_mysql_query_select(table=chosen_table_arg))
+        query_res_column_num = len(query_res)
 
+        # set up main new toplevel window root
         query_window_root = tkinter.Toplevel()
         query_window_root.title('Results from table \'' + chosen_table_arg + '\'')
         query_window_root.geometry(str(root.winfo_screenwidth()) + 'x' + str(root.winfo_screenheight()))
 
+        # set up base frame in new root
         query_window_mainframe = ttk.Frame(query_window_root)
         query_window_root.columnconfigure(0, weight=1)
         query_window_root.rowconfigure(0, weight=1)
         query_window_mainframe.grid(row=0, column=0)
 
-        query_res_column_num = len(query_res)
+        # create and put queried table title on screen
         query_window_base_label = ttk.Label(query_window_mainframe, text='Table \'' + chosen_table_arg + '\'')
         query_window_base_label.grid(row=0, column=0, columnspan=query_res_column_num)
 
+        # get queried table's columns
         columns = []
         columns = debug_mysql_get_col_names(chosen_table_arg)
+
+        # if the table has columns
         if columns is not []:
+            # set up and put labeled screen for grouping the table's columns' names
+            query_columns_title_frame = ttk.Labelframe(query_window_mainframe, text='Columns')
+            query_columns_title_frame.grid(row=1, column=0, columnspan=query_res_column_num)
+
+            # set up indexes for building
             row_index = 1
             column_index = 0
             # build up table titles
             for column in columns:
                 if ___DEBUG_MODE___ is True:
                     print(str(column))
-                ttk.Label(query_window_mainframe, text=column).grid(row=row_index, column=column_index, padx=5, pady=15)
+                ttk.Label(query_columns_title_frame, text=column).grid(row=row_index,
+                                                                       column=column_index, padx=5, pady=15)
                 column_index += 1
+            row_index = 0
             column_index = 0
+
+            def canvas_cfg(canvas_arg):
+                canvas_arg.configure(scrollregion=canvas_arg.bbox('all'))
+
+            # creating data frame root
+            query_columns_data_frame = ttk.Labelframe(query_window_mainframe, text='Records')
+            query_columns_data_frame.grid(row=2, column=0, columnspan=query_res_column_num)
+
+            # create canvas into data frame root and the scrollable frame into it
+            query_columns_data_canvas = tkinter.Canvas(query_columns_data_frame, borderwidth=0)
+            query_columns_data_frame_in_canvas = ttk.Frame(query_columns_data_canvas)
+
+            # create the scrollbar and configure the canvas
+            query_columns_data_scrollbar = tkinter.Scrollbar(query_columns_data_frame, orient='vertical')
+            query_columns_data_canvas.configure(ysrollcommand=query_columns_data_scrollbar.set())
+
+            # draw the canvas
+            query_columns_data_scrollbar.pack(side='right', fill='y')
+            query_columns_data_canvas.pack(side='left', fill='both', expand=True)
+            query_columns_data_canvas.create_window((4, 4),
+                                                    window=query_columns_data_frame_in_canvas, anchor='nw')
+            query_columns_data_frame_in_canvas.bind('<Configure>',
+                                                    lambda event, canv=query_columns_data_canvas: canvas_cfg(
+                                                        query_columns_data_canvas))
+
+            # population
             for item in query_res:
                 row_index += 1
                 for item_column in item:
-                    ttk.Label(query_window_mainframe, text=item_column).grid(row=row_index,
-                                                                             column=column_index, padx=5, pady=10)
+                    ttk.Label(query_columns_data_frame_in_canvas, text=item_column).grid(row=row_index,
+                                                                                         column=column_index, padx=5,
+                                                                                         pady=10)
                     column_index += 1
                 column_index = 0
+        # if the queried table did not have any columns
         else:
-            tkinter.messagebox.showwarning('Warning', 'Oops! Something went wrong :( ')
+            tkinter.messagebox.showwarning('Warning', 'Queried table has no columns!')
 
         if ___DEBUG_MODE___ is True:
             print('chosen_table_arg: ' + chosen_table_arg)
