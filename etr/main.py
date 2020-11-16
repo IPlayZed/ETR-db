@@ -33,15 +33,11 @@ class ScrollableFrame(ttk.Frame):
 
         canvas.configure(yscrollcommand=scrollbar_y.set)
         canvas.configure(xscrollcommand=scrollbar_x.set)
-
+        # '''
         canvas.grid(row=0, column=0)
         scrollbar_y.grid(row=0, column=1)
         scrollbar_x.grid(row=1, column=0)
-        '''
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar_y.pack(side="right", fill="y")
-        scrollbar_x.pack(fill="x")
-        '''
+
 
 
 # Returns an alphanumerical string with the length of <length:int>
@@ -360,7 +356,7 @@ def gui_normal_window(root):
                     column_index += 1
                 # ttk.Frame()
                 column_index = 0
-            query_columns_data_scrollable_frame.grid(row=0, column=0, rowspan=2)
+            query_columns_data_scrollable_frame.grid(row=0, column=0, rowspan=query_res_column_num)
         # if the queried table did not have any columns
         else:
             tkinter.messagebox.showwarning('Warning', 'Queried table has no columns!')
