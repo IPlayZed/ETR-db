@@ -33,11 +33,10 @@ class ScrollableFrame(ttk.Frame):
 
         canvas.configure(yscrollcommand=scrollbar_y.set)
         canvas.configure(xscrollcommand=scrollbar_x.set)
-        # '''
+
         canvas.grid(row=0, column=0)
         scrollbar_y.grid(row=0, column=1)
         scrollbar_x.grid(row=1, column=0)
-
 
 
 # Returns an alphanumerical string with the length of <length:int>
@@ -284,6 +283,21 @@ def debug_mysql_get_col_names(table_name):
         return -2
 
 
+def debug_mysql_query_insert_into(table, values, columns=None):
+    base_str = 'INSERT INTO '
+    base_str += (table + ' ')
+    if columns is not None:
+        base_str += '('
+        base_str += generator_concatenate_sql_params(str_list=columns)
+        base_str += ')'
+    base_str += ' VALUES ('
+    base_str += generator_concatenate_sql_params(str_list=values)
+    base_str += ')'
+    base_str = base_str.replace('  ', ' ').replace('( ', '(').replace(' )', ')').strip()
+    print(base_str)
+    return base_str
+
+
 def debug_string_is_int(string):
     try:
         int(string)
@@ -303,12 +317,13 @@ def gui_normal_window(root):
         # set up main new toplevel window root
         query_window_root = tkinter.Toplevel()
         query_window_root.title('Results from table \'' + chosen_table_arg + '\'')
-        query_window_root.geometry(str(root.winfo_screenwidth()) + 'x' + str(root.winfo_screenheight()))
+        query_window_root.geometry(scr_w_normal + 'x' + scr_h_normal)
 
         # set up base frame in new root
         query_window_mainframe = ttk.Frame(query_window_root)
         query_window_root.columnconfigure(0, weight=1)
         query_window_root.rowconfigure(0, weight=1)
+        # query_window_root.rowconfigure(2, weight=1)
         query_window_mainframe.grid(row=0, column=0)
 
         # create and put queried table title on screen
@@ -340,6 +355,7 @@ def gui_normal_window(root):
             # creating data frame root
             query_columns_data_frame = ttk.Labelframe(query_window_mainframe, text='Records')
             query_columns_data_frame.grid(row=2, column=0, columnspan=query_res_column_num)
+            # query_columns_data_frame.columnconfigure(0, weight=5)
 
             # creating scrollable frame instance
             query_columns_data_scrollable_frame = ScrollableFrame(query_columns_data_frame)
@@ -354,7 +370,6 @@ def gui_normal_window(root):
                         column=column_index, padx=5,
                         pady=10)
                     column_index += 1
-                # ttk.Frame()
                 column_index = 0
             query_columns_data_scrollable_frame.grid(row=0, column=0, rowspan=query_res_column_num)
         # if the queried table did not have any columns
@@ -365,8 +380,14 @@ def gui_normal_window(root):
             print('chosen_table_arg: ' + chosen_table_arg)
             print('query_res: ' + str(query_res))
 
-    def insert(root_arg, chosen_table_arg):
-        pass
+    def insert(root_arg, chosen_table_arg, table):
+        insert_window_root = tkinter.Toplevel()
+        insert_window_root.title('Insert into: \'' + table)
+        insert_window_root.geometry(scr_w_normal + 'X' + scr_h_normal)
+        insert_window_root.columnconfigure(0, weight=1)
+        insert_window_root.rowconfigure(0, weight=1)
+
+        insert_window_mainframe = ttk.Frame(insert_window_root)
 
     def modify(root_arg, chosen_table_arg):
         pass
@@ -376,7 +397,7 @@ def gui_normal_window(root):
 
     # root setup
     normal_window_root = tkinter.Toplevel()
-    normal_window_root.title("SQL queries")
+    normal_window_root.title('SQL queries')
     scr_w_normal = str(root.winfo_screenwidth() // 2)
     scr_h_normal = str(root.winfo_screenheight() // 2)
     normal_window_root.geometry(scr_w_normal + 'x' + scr_h_normal)
@@ -494,7 +515,7 @@ def gui_home_window(root):
 
 
 if __name__ == '__main__':
-    a = debug_mysql_get_col_names('oktato')
+    # a = debug_mysql_query_insert_into('oktato', ['alma', 'répa'], ['oszl1', 'oszl2'])
     root_widget = tkinter.Tk()
     scr_w = str(root_widget.winfo_screenwidth() // 2)
     scr_h = str(root_widget.winfo_screenheight() // 2)
