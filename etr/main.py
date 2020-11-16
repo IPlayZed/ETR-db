@@ -28,6 +28,8 @@ def generator_get_random_alphanumeric_str_list(str_len, list_len):
         else:
             generated_list.append(item)
             index += 1
+        if ___DEBUG_MODE___ is True:
+            print('generator_get_random_alphanumeric_str_list: ' + str(index) + '/' + str(list_len))
     return generated_list
 
 
@@ -39,6 +41,8 @@ def generator_get_random_name_list(list_len, firstname=True):
             generated_list.append(get_first_name())
         elif not firstname:
             generated_list.append(get_last_name())
+        if ___DEBUG_MODE___ is True:
+            print('generator_get_random_name_list: ' + str(i) + '/' + str(list_len))
     return generated_list
 
 
@@ -51,6 +55,8 @@ def generator_get_random_binary_choice_list(list_len, likely_choice, unlikely_ch
             generated_list.append(unlikely_choice)
         else:
             generated_list.append(likely_choice)
+        if ___DEBUG_MODE___ is True:
+            print('generator_get_random_binary_choice_list: ' + str(i) + '/' + str(list_len))
     return generated_list
 
 
@@ -59,6 +65,8 @@ def generator_get_random_int_list(list_len, min_int, max_int):
     for i in range(list_len):
         seed()
         generated_list.append(randint(min_int, randint(min_int, max_int)))
+        if ___DEBUG_MODE___ is True:
+            print('generator_get_random_int_list: ' + str(i) + '/' + str(list_len))
     return generated_list
 
 
@@ -67,6 +75,8 @@ def generator_get_random_address_list(list_len):
     fkr = Faker()
     for i in range(list_len):
         generated_list.append(fkr.address().strip().replace("\n", " "))
+        if ___DEBUG_MODE___ is True:
+            print('generator_get_random_address_list: ' + str(i) + '/' + str(list_len))
     return generated_list
 
 
@@ -230,7 +240,24 @@ def debug_mysql_delete_table_data(table_name, where_arg=None, force_truncate=Fal
     return 0
 
 
-def debug_is_int(string):
+def debug_mysql_get_col_names(table_name):
+    columns = []
+    if type(table_name) is str:
+        processable = mysql_query('DESCRIBE ' + table_name)
+        if len(processable) == 0:
+            if ___DEBUG_MODE___ is True:
+                print('Query resulted in no fetchable data')
+            return -1
+        else:
+            for item in processable:
+                columns.append(item[0])
+            return columns
+    else:
+        print('Parameter must be a string!')
+        return -2
+
+
+def debug_string_is_int(string):
     try:
         int(string)
         return True
@@ -243,9 +270,44 @@ def gui_normal_window(root):
     # TODO: implement GUI formatted listing and graphing
     def list_db(root_arg, chosen_table_arg):
         query_res = mysql_query(debug_mysql_query_select(table=chosen_table_arg))
+
+        query_window_root = tkinter.Toplevel()
+        query_window_root.title('Results from table \'' + chosen_table_arg + '\'')
+        query_window_root.geometry(str(root.winfo_screenwidth()) + 'x' + str(root.winfo_screenheight()))
+
+        query_window_mainframe = ttk.Frame(query_window_root)
+        query_window_root.columnconfigure(0, weight=1)
+        query_window_root.rowconfigure(0, weight=1)
+        query_window_mainframe.grid(row=0, column=0)
+
+        query_res_column_num = len(query_res)
+        query_window_base_label = ttk.Label(query_window_mainframe, text='Table \'' + chosen_table_arg + '\'')
+        query_window_base_label.grid(row=0, column=0, columnspan=query_res_column_num)
+
+        columns = []
+        columns = debug_mysql_get_col_names(chosen_table_arg)
+        if columns is not []:
+            row_index = 1
+            column_index = 0
+            # build up table titles
+            for column in columns:
+                if ___DEBUG_MODE___ is True:
+                    print(str(column))
+                ttk.Label(query_window_mainframe, text=column).grid(row=row_index, column=column_index, padx=5, pady=15)
+                column_index += 1
+            column_index = 0
+            for item in query_res:
+                row_index += 1
+                for item_column in item:
+                    ttk.Label(query_window_mainframe, text=item_column).grid(row=row_index,
+                                                                             column=column_index, padx=5, pady=10)
+                    column_index += 1
+                column_index = 0
+        else:
+            tkinter.messagebox.showwarning('Warning', 'Oops! Something went wrong :( ')
+
         if ___DEBUG_MODE___ is True:
             print('chosen_table_arg: ' + chosen_table_arg)
-            # TODO: implement a function for parsing query result
             print('query_res: ' + str(query_res))
 
     def insert(root_arg, chosen_table_arg):
@@ -320,7 +382,7 @@ def gui_admin_window(root):
         # TODO: handle called debug function record code.
         if dummy_fill_entry.get() == '':
             tkinter.messagebox.showwarning('Warning', 'Entry must be filled!')
-        elif debug_is_int(dummy_fill_entry.get()) is False:
+        elif debug_string_is_int(dummy_fill_entry.get()) is False:
             tkinter.messagebox.showwarning('Warning', 'Entry must be an integer!')
         else:
             debug_mysql_fill_dummy_data(int(dummy_fill_entry.get()))
@@ -377,11 +439,13 @@ def gui_home_window(root):
 
 
 if __name__ == '__main__':
+    a = debug_mysql_get_col_names('oktato')
     root_widget = tkinter.Tk()
     scr_w = str(root_widget.winfo_screenwidth() // 2)
     scr_h = str(root_widget.winfo_screenheight() // 2)
     root_widget.geometry(scr_w + 'x' + scr_h)
     root_widget.attributes('-fullscreen', 0)
+    # TODO: find out why iconbitmap() does not work!!!
     # root_widget.iconbitmap('icon.ico')
     gui_home_window(root=root_widget)
     root_widget.mainloop()
