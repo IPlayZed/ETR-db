@@ -13,6 +13,37 @@ from PIL import ImageTk, Image
 ___DEBUG_MODE___ = True
 
 
+# TODO: test this stuff more
+class ScrollableFrame(ttk.Frame):
+    def __init__(self, container, *args, **kwargs):
+        super().__init__(container, *args, **kwargs)
+        canvas = tkinter.Canvas(self)
+        scrollbar_y = ttk.Scrollbar(self, orient='vertical', command=canvas.yview)
+        scrollbar_x = ttk.Scrollbar(self, orient='horizontal', command=canvas.xview)
+        self.scrollable_frame = ttk.Frame(canvas)
+
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
+
+        canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+
+        canvas.configure(yscrollcommand=scrollbar_y.set)
+        canvas.configure(xscrollcommand=scrollbar_x.set)
+
+        canvas.grid(row=0, column=0)
+        scrollbar_y.grid(row=0, column=1)
+        scrollbar_x.grid(row=1, column=0)
+        '''
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar_y.pack(side="right", fill="y")
+        scrollbar_x.pack(fill="x")
+        '''
+
+
 # Returns an alphanumerical string with the length of <length:int>
 def generator_get_random_alphanumeric_str(length):
     return ''.join(choices(ascii_letters + digits, k=length))
@@ -308,42 +339,28 @@ def gui_normal_window(root):
                 ttk.Label(query_columns_title_frame, text=column).grid(row=row_index,
                                                                        column=column_index, padx=5, pady=15)
                 column_index += 1
-            row_index = 0
             column_index = 0
-
-            def canvas_cfg(canvas_arg):
-                canvas_arg.configure(scrollregion=canvas_arg.bbox('all'))
 
             # creating data frame root
             query_columns_data_frame = ttk.Labelframe(query_window_mainframe, text='Records')
             query_columns_data_frame.grid(row=2, column=0, columnspan=query_res_column_num)
 
-            # create canvas into data frame root and the scrollable frame into it
-            query_columns_data_canvas = tkinter.Canvas(query_columns_data_frame, borderwidth=0)
-            query_columns_data_frame_in_canvas = ttk.Frame(query_columns_data_canvas)
-
-            # create the scrollbar and configure the canvas
-            query_columns_data_scrollbar = tkinter.Scrollbar(query_columns_data_frame, orient='vertical')
-            query_columns_data_canvas.configure(ysrollcommand=query_columns_data_scrollbar.set())
-
-            # draw the canvas
-            query_columns_data_scrollbar.pack(side='right', fill='y')
-            query_columns_data_canvas.pack(side='left', fill='both', expand=True)
-            query_columns_data_canvas.create_window((4, 4),
-                                                    window=query_columns_data_frame_in_canvas, anchor='nw')
-            query_columns_data_frame_in_canvas.bind('<Configure>',
-                                                    lambda event, canv=query_columns_data_canvas: canvas_cfg(
-                                                        query_columns_data_canvas))
+            # creating scrollable frame instance
+            query_columns_data_scrollable_frame = ScrollableFrame(query_columns_data_frame)
 
             # population
             for item in query_res:
                 row_index += 1
                 for item_column in item:
-                    ttk.Label(query_columns_data_frame_in_canvas, text=item_column).grid(row=row_index,
-                                                                                         column=column_index, padx=5,
-                                                                                         pady=10)
+                    # row was rowindex
+                    ttk.Label(query_columns_data_scrollable_frame.scrollable_frame, text=item_column).grid(
+                        row=row_index,
+                        column=column_index, padx=5,
+                        pady=10)
                     column_index += 1
+                # ttk.Frame()
                 column_index = 0
+            query_columns_data_scrollable_frame.grid(row=0, column=0, rowspan=2)
         # if the queried table did not have any columns
         else:
             tkinter.messagebox.showwarning('Warning', 'Queried table has no columns!')
