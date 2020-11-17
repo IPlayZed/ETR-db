@@ -374,7 +374,7 @@ def gui_normal_window(root):
                         max_w = tmp.winfo_screenwidth()
                     column_index += 1
                 column_index = 0
-            query_columns_data_scrollable_frame.grid(row=0, column=0, rowspan=scr_h_normal)
+            query_columns_data_scrollable_frame.grid(row=0, column=0, rowspan=query_res_column_num)
             query_columns_data_scrollable_frame.change_canvas_size_w(w=max_w)
         # if the queried table did not have any columns
         else:
@@ -387,7 +387,7 @@ def gui_normal_window(root):
     def insert(root_arg, chosen_table_arg, table):
         insert_window_root = tkinter.Toplevel()
         insert_window_root.title('Insert into: \'' + table)
-        #insert_window_root.geometry(scr_w_normal + 'X' + scr_h_normal)
+        # insert_window_root.geometry(scr_w_normal + 'X' + scr_h_normal)
         insert_window_root.columnconfigure(0, weight=1)
         insert_window_root.rowconfigure(0, weight=1)
 
@@ -402,9 +402,9 @@ def gui_normal_window(root):
     # root setup
     normal_window_root = tkinter.Toplevel()
     normal_window_root.title('SQL queries')
-    scr_w_normal = str(root.winfo_screenwidth() // 2)
-    scr_h_normal = str(root.winfo_screenheight() // 2)
-    #normal_window_root.geometry(scr_w_normal + 'x' + scr_h_normal)
+    # scr_w_normal = str(root.winfo_screenwidth() // 2)
+    # scr_h_normal = str(root.winfo_screenheight() // 2)
+    # normal_window_root.geometry(scr_w_normal + 'x' + scr_h_normal)
     normal_window_root.columnconfigure(0, weight=1)
     normal_window_root.rowconfigure(0, weight=1)
 
