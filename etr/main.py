@@ -17,26 +17,29 @@ ___DEBUG_MODE___ = True
 class ScrollableFrame(ttk.Frame):
     def __init__(self, container, *args, **kwargs):
         super().__init__(container, *args, **kwargs)
-        canvas = tkinter.Canvas(self)
-        scrollbar_y = ttk.Scrollbar(self, orient='vertical', command=canvas.yview)
-        scrollbar_x = ttk.Scrollbar(self, orient='horizontal', command=canvas.xview)
-        self.scrollable_frame = ttk.Frame(canvas)
+        self.canvas = tkinter.Canvas(self)
+        scrollbar_y = ttk.Scrollbar(self, orient='vertical', command=self.canvas.yview)
+        scrollbar_x = ttk.Scrollbar(self, orient='horizontal', command=self.canvas.xview)
+        self.scrollable_frame = ttk.Frame(self.canvas)
 
         self.scrollable_frame.bind(
             "<Configure>",
-            lambda e: canvas.configure(
-                scrollregion=canvas.bbox("all")
+            lambda e: self.canvas.configure(
+                scrollregion=self.canvas.bbox("all")
             )
         )
 
-        canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
 
-        canvas.configure(yscrollcommand=scrollbar_y.set)
-        canvas.configure(xscrollcommand=scrollbar_x.set)
+        self.canvas.configure(yscrollcommand=scrollbar_y.set)
+        self.canvas.configure(xscrollcommand=scrollbar_x.set)
 
-        canvas.grid(row=0, column=0)
+        self.canvas.grid(row=0, column=0)
         scrollbar_y.grid(row=0, column=1)
         scrollbar_x.grid(row=1, column=0)
+
+    def change_canvas_size_w(self, w):
+        self.canvas.configure(width=w)
 
 
 # Returns an alphanumerical string with the length of <length:int>
@@ -317,7 +320,7 @@ def gui_normal_window(root):
         # set up main new toplevel window root
         query_window_root = tkinter.Toplevel()
         query_window_root.title('Results from table \'' + chosen_table_arg + '\'')
-        query_window_root.geometry(scr_w_normal + 'x' + scr_h_normal)
+        # query_window_root.geometry(scr_w_normal + 'x' + scr_h_normal)
 
         # set up base frame in new root
         query_window_mainframe = ttk.Frame(query_window_root)
@@ -359,19 +362,20 @@ def gui_normal_window(root):
 
             # creating scrollable frame instance
             query_columns_data_scrollable_frame = ScrollableFrame(query_columns_data_frame)
-
             # population
+            max_w = 0
             for item in query_res:
                 row_index += 1
                 for item_column in item:
                     # row was rowindex
-                    ttk.Label(query_columns_data_scrollable_frame.scrollable_frame, text=item_column).grid(
-                        row=row_index,
-                        column=column_index, padx=5,
-                        pady=10)
+                    tmp = ttk.Label(query_columns_data_scrollable_frame.scrollable_frame, text=item_column)
+                    tmp.grid(row=row_index, column=column_index, padx=5, pady=10)
+                    if tmp.winfo_screenwidth() > max_w:
+                        max_w = tmp.winfo_screenwidth()
                     column_index += 1
                 column_index = 0
-            query_columns_data_scrollable_frame.grid(row=0, column=0, rowspan=query_res_column_num)
+            query_columns_data_scrollable_frame.grid(row=0, column=0, rowspan=scr_h_normal)
+            query_columns_data_scrollable_frame.change_canvas_size_w(w=max_w)
         # if the queried table did not have any columns
         else:
             tkinter.messagebox.showwarning('Warning', 'Queried table has no columns!')
@@ -383,7 +387,7 @@ def gui_normal_window(root):
     def insert(root_arg, chosen_table_arg, table):
         insert_window_root = tkinter.Toplevel()
         insert_window_root.title('Insert into: \'' + table)
-        insert_window_root.geometry(scr_w_normal + 'X' + scr_h_normal)
+        #insert_window_root.geometry(scr_w_normal + 'X' + scr_h_normal)
         insert_window_root.columnconfigure(0, weight=1)
         insert_window_root.rowconfigure(0, weight=1)
 
@@ -400,7 +404,7 @@ def gui_normal_window(root):
     normal_window_root.title('SQL queries')
     scr_w_normal = str(root.winfo_screenwidth() // 2)
     scr_h_normal = str(root.winfo_screenheight() // 2)
-    normal_window_root.geometry(scr_w_normal + 'x' + scr_h_normal)
+    #normal_window_root.geometry(scr_w_normal + 'x' + scr_h_normal)
     normal_window_root.columnconfigure(0, weight=1)
     normal_window_root.rowconfigure(0, weight=1)
 
@@ -517,8 +521,8 @@ def gui_home_window(root):
 if __name__ == '__main__':
     # a = debug_mysql_query_insert_into('oktato', ['alma', 'répa'], ['oszl1', 'oszl2'])
     root_widget = tkinter.Tk()
-    scr_w = str(root_widget.winfo_screenwidth() // 2)
-    scr_h = str(root_widget.winfo_screenheight() // 2)
+    scr_w = str(root_widget.winfo_screenwidth() // 3)
+    scr_h = str(root_widget.winfo_screenheight() // 3)
     root_widget.geometry(scr_w + 'x' + scr_h)
     root_widget.attributes('-fullscreen', 0)
     # TODO: find out why iconbitmap() does not work!!!
