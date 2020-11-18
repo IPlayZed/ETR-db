@@ -1,4 +1,5 @@
 import tkinter
+import tkinter.font
 from random import choices, randint, seed
 from string import ascii_letters, digits
 from tkinter import *
@@ -363,19 +364,27 @@ def gui_normal_window(root):
             # creating scrollable frame instance
             query_columns_data_scrollable_frame = ScrollableFrame(query_columns_data_frame)
             # population
-            max_w = 0
+            max_length = 0
+            max_c = tkinter.font.Font(weight='normal').measure('0')
             for item in query_res:
                 row_index += 1
+                max_length_tmp = 0
                 for item_column in item:
                     # row was rowindex
                     tmp = ttk.Label(query_columns_data_scrollable_frame.scrollable_frame, text=item_column)
                     tmp.grid(row=row_index, column=column_index, padx=5, pady=10)
+                    '''
                     if tmp.winfo_screenwidth() > max_w:
                         max_w = tmp.winfo_screenwidth()
+                    '''
+                    if item_column is not None:
+                        max_length_tmp += len(item_column)
                     column_index += 1
+                if max_length_tmp > max_length:
+                    max_length = max_length_tmp
                 column_index = 0
             query_columns_data_scrollable_frame.grid(row=0, column=0, rowspan=query_res_column_num)
-            query_columns_data_scrollable_frame.change_canvas_size_w(w=max_w)
+            query_columns_data_scrollable_frame.change_canvas_size_w(w=max_length * max_c)
         # if the queried table did not have any columns
         else:
             tkinter.messagebox.showwarning('Warning', 'Queried table has no columns!')
