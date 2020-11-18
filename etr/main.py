@@ -312,8 +312,8 @@ def debug_string_is_int(string):
 
 def gui_normal_window(root):
     # functionality lambdas
-    # TODO: implement GUI formatted listing and graphing
-    def list_db(root_arg, chosen_table_arg):
+    # TODO: implement GUI graphing
+    def list_db(chosen_table_arg):
         # get the result of query in a list of tuples and meta
         query_res = mysql_query(debug_mysql_query_select(table=chosen_table_arg))
         query_res_column_num = len(query_res)
@@ -393,44 +393,57 @@ def gui_normal_window(root):
             print('chosen_table_arg: ' + chosen_table_arg)
             print('query_res: ' + str(query_res))
 
-    def insert(root_arg, chosen_table_arg, table):
+    def insert(chosen_table_arg):
+        table = chosen_table_arg
         insert_window_root = tkinter.Toplevel()
-        insert_window_root.title('Insert into: \'' + table)
+        insert_window_root.title("Insert into: '" + table + "'")
         # insert_window_root.geometry(scr_w_normal + 'X' + scr_h_normal)
         insert_window_root.columnconfigure(0, weight=1)
         insert_window_root.rowconfigure(0, weight=1)
 
         insert_window_mainframe = ttk.Frame(insert_window_root)
+        insert_window_mainframe.grid(row=0, column=0)
 
-    def modify(root_arg, chosen_table_arg):
+        entry = ttk.Entry(insert_window_mainframe, text='Insert into column')
+        button = ttk.Button(insert_window_mainframe)
+        insert_rbl_frame = ttk.Labelframe(insert_window_mainframe, text="Columns in table: '" + table + "'")
+
+        entry.grid(row=0, column=1)
+        button.grid(row=1, column=1)
+        insert_rbl_frame.grid(row=0, column=0, rowspan=2)
+
+        columns = debug_mysql_get_col_names(table_name=table)
+        chosen_column = tkinter.StringVar()
+        chosen_column.set(columns[0])
+
+        for column in columns:
+            Radiobutton(insert_rbl_frame, text=column, variable=chosen_column, value=column,
+                        command=lambda: radio_b_clicked(chosen_column.get())).pack(anchor=W)
+            if ___DEBUG_MODE___ is True:
+                print('text:\"' + column + '\", value:\"' + column + '\"')
+
+    def modify(chosen_table_arg):
         pass
 
-    def delete(root_arg, chosen_table_arg):
+    def delete(chosen_table_arg):
         pass
 
     # root setup
     normal_window_root = tkinter.Toplevel()
     normal_window_root.title('SQL queries')
-    # scr_w_normal = str(root.winfo_screenwidth() // 2)
-    # scr_h_normal = str(root.winfo_screenheight() // 2)
-    # normal_window_root.geometry(scr_w_normal + 'x' + scr_h_normal)
     normal_window_root.columnconfigure(0, weight=1)
     normal_window_root.rowconfigure(0, weight=1)
 
     # basic widgets setup
     main_frame = ttk.Frame(normal_window_root)
     list_db_button = ttk.Button(main_frame, text='List records from tables',
-                                command=lambda: list_db(root_arg=normal_window_root,
-                                                        chosen_table_arg=chosen_table.get()))
+                                command=lambda: list_db(chosen_table_arg=chosen_table.get()))
     insert_db_button = ttk.Button(main_frame, text='Insert record into table',
-                                  command=lambda: insert(root_arg=normal_window_root,
-                                                         chosen_table_arg=chosen_table.get()))
+                                  command=lambda: insert(chosen_table_arg=chosen_table.get()))
     modify_db_button = ttk.Button(main_frame, text='Modify (update) record in table',
-                                  command=lambda: modify(root_arg=normal_window_root,
-                                                         chosen_table_arg=chosen_table.get()))
+                                  command=lambda: modify(chosen_table_arg=chosen_table.get()))
     delete_db_button = ttk.Button(main_frame, text='Delete record from database',
-                                  command=lambda: delete(root_arg=normal_window_root,
-                                                         chosen_table_arg=chosen_table.get()))
+                                  command=lambda: delete(chosen_table_arg=chosen_table.get()))
 
     # radio button widgets setup
     radio_b_l_frame = ttk.Labelframe(main_frame, text='Choosable tables')
@@ -443,11 +456,9 @@ def gui_normal_window(root):
         ('table: \'terem\'', 'terem'),
     ]
 
-    def radio_b_clicked(val):
-        # TODO: find out why does this F up my code if I leave it in it
-        # chosen_table.set(value=val)
-        if ___DEBUG_MODE___ is True:
-            print(chosen_table.get())
+    def radio_b_clicked(printable=None):
+        if ___DEBUG_MODE___ is True and (printable is not None):
+            print(printable)
 
     # normal widgets rendering
     main_frame.grid(row=0, column=0)
@@ -460,7 +471,7 @@ def gui_normal_window(root):
     # radio buttons rendering
     for rad_b_l_txt, rad_b_l_val in radio_b_modes:
         Radiobutton(radio_b_l_frame, text=rad_b_l_txt, variable=chosen_table, value=rad_b_l_val,
-                    command=lambda: radio_b_clicked(rad_b_l_val)).pack(anchor=W)
+                    command=lambda: radio_b_clicked(chosen_table.get())).pack(anchor=W)
         if ___DEBUG_MODE___ is True:
             print('text:\"' + rad_b_l_txt + '\", value:\"' + rad_b_l_val + '\"')
 
@@ -528,7 +539,7 @@ def gui_home_window(root):
 
 
 if __name__ == '__main__':
-    # a = debug_mysql_query_insert_into('oktato', ['alma', 'répa'], ['oszl1', 'oszl2'])
+    # a = debug_mysql_get_col_names('oktato')
     root_widget = tkinter.Tk()
     scr_w = str(root_widget.winfo_screenwidth() // 3)
     scr_h = str(root_widget.winfo_screenheight() // 3)
