@@ -123,13 +123,15 @@ def generator_concatenate_sql_params(str_list):
 
 
 # Establishes connection and returns query fetch
-def mysql_query(query, user_arg='root', password_arg='', host_arg='localhost', database_arg='etrdb'):
+def mysql_query(query, user_arg='root', password_arg='', host_arg='localhost', database_arg='etrdb', fetch=True):
     try:
         clx = mysql.connector.connect(user=user_arg, password=password_arg, host=host_arg,
                                       database=database_arg)
         cursor = clx.cursor()
         cursor.execute(query)
-        returnable = cursor.fetchall()
+        returnable = None
+        if fetch is True:
+            returnable = cursor.fetchall()
         clx.close()
         return returnable
     # implement more error handling, for the cursor() as well!!!
@@ -141,7 +143,7 @@ def mysql_query(query, user_arg='root', password_arg='', host_arg='localhost', d
             print("ERROR:Database does not exist")
             return -2
         else:
-            print("ERROR:Other error")
+            print("ERROR:Other error: " + str(connection_error))
             return -3
 
 
@@ -313,6 +315,27 @@ def debug_string_is_int(string):
 def gui_normal_window(root):
     # functionality lambdas
     # TODO: implement GUI graphing
+    ___INTEGER___ = 'i'
+    ___U_INTEGER___ = 'ui'
+    ___STRING___ = 'str'
+
+    def get_column_meta(columns, column_index):
+        tmp = columns[column_index][1]
+        if tmp.startswith('varchar') is True:
+            col_type = ___STRING___
+        if tmp.startswith('int') is True:
+            col_type = ___INTEGER___
+            if tmp.endswith('unsigned') is True:
+                col_type = ___U_INTEGER___
+        col_len = int(tmp.split('(')[1].split(')')[0])
+        tmp = columns[column_index][2]
+        if tmp == 'NO':
+            col_isnull = False
+        if tmp == 'YES':
+            col_isnull = True
+        col_dict = {'type': col_type, 'length': col_len, 'isnull': col_isnull}
+        return col_dict
+
     def list_db(chosen_table_arg):
         # get the result of query in a list of tuples and meta
         query_res = mysql_query(debug_mysql_query_select(table=chosen_table_arg))
@@ -378,7 +401,7 @@ def gui_normal_window(root):
                         max_w = tmp.winfo_screenwidth()
                     '''
                     if item_column is not None:
-                        max_length_tmp += len(item_column)
+                        max_length_tmp += len(str(item_column))
                     column_index += 1
                 if max_length_tmp > max_length:
                     max_length = max_length_tmp
@@ -394,33 +417,58 @@ def gui_normal_window(root):
             print('query_res: ' + str(query_res))
 
     def insert(chosen_table_arg):
-        table = chosen_table_arg
-        insert_window_root = tkinter.Toplevel()
-        insert_window_root.title("Insert into: '" + table + "'")
-        # insert_window_root.geometry(scr_w_normal + 'X' + scr_h_normal)
-        insert_window_root.columnconfigure(0, weight=1)
-        insert_window_root.rowconfigure(0, weight=1)
 
-        insert_window_mainframe = ttk.Frame(insert_window_root)
-        insert_window_mainframe.grid(row=0, column=0)
+        def make_query(entry_list, column_list):
+            index = 0
+            value_list = []
+            for item in entry_list:
+                col_dict = get_column_meta(columns=column_list, column_index=index)
+                col_type = col_dict['type']
+                col_len = col_dict['length']
+                col_isnull = col_dict['isnull']
+                inp = item.get()
+                if inp == '' and col_isnull is False:
+                    tkinter.messagebox.showwarning('Warning', 'Field ' + column_list[index][0] + ' can not be empty!')
+                if debug_string_is_int(inp) is True and (col_type is ___INTEGER___ or col_type is ___U_INTEGER___):
+                    if int(inp) < 0 and col_type is ___U_INTEGER___:
+                        tkinter.messagebox.showwarning('Warning',
+                                                       'Field ' + column_list[index][0] + ' must be positive')
+                elif debug_string_is_int(inp) is False and col_type is ___INTEGER___:
+                    tkinter.messagebox.showwarning('Warning', 'Field' + column_list[index][0] + ' must be an integer!')
+                elif debug_string_is_int(inp) is False and len(inp) > col_len:
+                    tkinter.messagebox.showwarning('Warning',
+                                                   'Field' + column_list[index][0] + ' can be maximally ' + str(
+                                                       col_len) + ' long!')
 
-        entry = ttk.Entry(insert_window_mainframe, text='Insert into column')
-        button = ttk.Button(insert_window_mainframe)
-        insert_rbl_frame = ttk.Labelframe(insert_window_mainframe, text="Columns in table: '" + table + "'")
+                value_list.append(inp)
+                index += 1
+            mysql_query(debug_mysql_query_insert_into(table=chosen_table_arg, values=value_list))
 
-        entry.grid(row=0, column=1)
-        button.grid(row=1, column=1)
-        insert_rbl_frame.grid(row=0, column=0, rowspan=2)
+        # set up the basics of insert window
+        insert_root = tkinter.Toplevel()
+        insert_root.title('Insert data into table ' + chosen_table_arg)
+        insert_root.columnconfigure(0, weight=1)
+        insert_root.rowconfigure(0, weight=1)
 
-        columns = debug_mysql_get_col_names(table_name=table)
-        chosen_column = tkinter.StringVar()
-        chosen_column.set(columns[0])
+        # set up root frame
+        insert_root_frame = tkinter.Frame(insert_root)
+        insert_root_frame.grid(row=0, column=1, padx=10, pady=10)
 
+        # get metadata about table
+        columns = mysql_query('DESCRIBE ' + chosen_table_arg)
+        row_i = 0
+        entries = []
         for column in columns:
-            Radiobutton(insert_rbl_frame, text=column, variable=chosen_column, value=column,
-                        command=lambda: radio_b_clicked(chosen_column.get())).pack(anchor=W)
-            if ___DEBUG_MODE___ is True:
-                print('text:\"' + column + '\", value:\"' + column + '\"')
+            tkinter.Label(insert_root_frame, text=column[0]).grid(row=row_i, column=0, padx=5)
+            entries.append(tkinter.Entry(insert_root_frame))
+            row_i += 1
+        row_i = 0
+        for entry in entries:
+            entry.grid(row=row_i, column=1, padx=5)
+            row_i += 1
+        btn = tkinter.Button(insert_root_frame, text='Insert into ' + chosen_table_arg,
+                             command=lambda: make_query(entry_list=entries, column_list=columns))
+        btn.grid(row=row_i, column=0, columnspan=3, pady=5)
 
     def modify(chosen_table_arg):
         pass
@@ -539,7 +587,7 @@ def gui_home_window(root):
 
 
 if __name__ == '__main__':
-    # a = debug_mysql_get_col_names('oktato')
+    a = mysql_query('DESCRIBE targy')
     root_widget = tkinter.Tk()
     scr_w = str(root_widget.winfo_screenwidth() // 3)
     scr_h = str(root_widget.winfo_screenheight() // 3)
