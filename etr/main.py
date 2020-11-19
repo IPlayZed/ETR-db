@@ -1,3 +1,4 @@
+# TODO (V2): rewrite the app in OOP
 import tkinter
 import tkinter.font
 from random import choices, randint, seed
@@ -14,7 +15,7 @@ from names import get_first_name, get_last_name
 ___DEBUG_MODE___ = True
 
 
-# TODO: test this stuff more
+# TODO (V2): add function to determine exact size of the inner content
 class ScrollableFrame(ttk.Frame):
     def __init__(self, container, *args, **kwargs):
         super().__init__(container, *args, **kwargs)
@@ -254,9 +255,12 @@ def debug_mysql_fill_dummy_data(records_num=100):
         con.close()
 
 
-def debug_mysql_delete_table_data(table_name, where_arg=None, force_truncate=False, user_arg='root', password_arg='',
-                                  host_arg='localhost',
-                                  database_arg='etrdb'):
+# TODO (V2): make this function, so it only returns the query string itself //
+# TODO (V2): improve error handling while creating appropriate prompts //
+# TODO (V2): rewrite against injection attacks
+def debug_mysql_delete(table_name, column_arg=None,
+                       where_arg=None, force_truncate=False, user_arg='root',
+                       password_arg='', host_arg='localhost', database_arg='etrdb'):
     mlx = mysql.connector.connect(user=user_arg, password=password_arg, host=host_arg,
                                   database=database_arg)
     cursor = mlx.cursor()
@@ -267,12 +271,13 @@ def debug_mysql_delete_table_data(table_name, where_arg=None, force_truncate=Fal
             cursor.execute('TRUNCATE table ' + table_name)
             mlx.commit()
             cursor.execute('SET FOREIGN_KEY_CHECKS = 1')
-            mlx.commit()
-        if where_arg is None:
-            cursor.execute('DELETE FROM ' + table_name)
+        elif column_arg is None and where_arg is None:
+            print('DELETE FROM ' + str(table_name))
+            cursor.execute('DELETE FROM ' + str(table_name))
         else:
-            cursor.execute('DELETE FROM ' + table_name + ' WHERE ' + where_arg)
-        cursor.execute('commit')
+            print('DELETE FROM ' + str(table_name) + ' WHERE ' + str(column_arg) + "='" + str(where_arg) + "'")
+            cursor.execute('DELETE FROM ' + str(table_name) + ' WHERE ' + str(column_arg) + "='" + str(where_arg) + "'")
+        mlx.commit()
         mlx.close()
     else:
         print("\'table_name\' can only be of type str")
@@ -481,8 +486,22 @@ def gui_normal_window():
 
     def delete(chosen_table_arg):
         # TODO: implement making the DELETE query with handling no column or where clauses
-        def make_query(table, col, where):
-            pass
+        def make_query(table, col, cols, where):
+            if col is '':
+                if where is '':
+                    debug_mysql_delete(table_name=table)
+                    tkinter.messagebox.showinfo('Info', 'Good arguments, check logs for possible DB error!')
+                else:
+                    tkinter.messagebox.showwarning('Warning', 'You can not add a where clause if no column is chosen!')
+            elif col is not '':
+                if col not in columns:
+                    tkinter.messagebox.showwarning('Warning', 'Requested column is not in table!')
+                elif where is '':
+                    tkinter.messagebox.showwarning('Warning', 'Must give a where clause for column!')
+                else:
+                    debug_mysql_delete(table_name=table, column_arg=col, where_arg=where)
+                    tkinter.messagebox.showinfo('Info', 'Good arguments, check logs for possible DB error!')
+            delete_window_root.destroy()
 
         # get meta about table
         columns_raw = mysql_query('DESCRIBE ' + chosen_table_arg)
@@ -492,7 +511,7 @@ def gui_normal_window():
 
         # new toplevel window root setup
         delete_window_root = tkinter.Toplevel()
-        delete_window_root.title("Delete from '" + chosen_table_arg)
+        delete_window_root.title("Delete from '" + chosen_table_arg + "'")
         delete_window_root.columnconfigure(0, weight=1)
         delete_window_root.rowconfigure(0, weight=1)
 
@@ -509,7 +528,8 @@ def gui_normal_window():
         where_entry.grid(row=2, column=1)
         tkinter.Button(delete_window_main_frame, text='Delete',
                        command=lambda: make_query(table=chosen_table_arg, col=column_entry.get(),
-                                                  where=where_entry.get())).grid(row=3, column=0, columnspan=3)
+                                                  where=where_entry.get(), cols=columns)).grid(row=3, column=0,
+                                                                                               columnspan=3)
 
     # new toplevel window root setup
     normal_window_root = tkinter.Toplevel()
@@ -577,7 +597,7 @@ def gui_admin_window(root):
         tables = ['felvetel', 'gepterem', 'hallgato', 'kurzus', 'leadas', 'oktato', 'targy', 'terem']
         func_ret_code = None
         for table in tables:
-            func_ret_code = debug_mysql_delete_table_data(table_name=table, force_truncate=True)
+            func_ret_code = debug_mysql_delete(table_name=table, force_truncate=True)
         if func_ret_code == 0:
             tkinter.messagebox.showinfo('Info', 'Successful data deletion!')
         else:
