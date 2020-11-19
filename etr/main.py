@@ -317,6 +317,25 @@ def debug_mysql_query_insert_into(table, values, columns=None):
     return base_str
 
 
+def debug_mysql_query_update(table, columns, values, where=None):
+    base_str = 'UPDATE ' + table + ' SET '
+    if len(columns) != len(values):
+        print('ERROR: Length of columns and values array different!')
+    else:
+        index = 0
+        while index < len(columns):
+            if index != len(columns) - 1:
+                base_str += (columns[index] + " = '" + values[index] + "', ")
+            else:
+                base_str += (columns[index] + " = '" + values[index] + "' ")
+            index += 1
+        if where is not None:
+            base_str += "WHERE " + where
+    if ___DEBUG_MODE___ is True:
+        print(base_str)
+    return base_str
+
+
 def debug_string_is_int(string):
     try:
         int(string)
@@ -454,6 +473,7 @@ def gui_normal_window():
                 value_list.append(inp)
                 index += 1
             mysql_query(debug_mysql_query_insert_into(table=chosen_table_arg, values=value_list), fetch=False)
+            tkinter.messagebox.showinfo('Info', 'Good parameters, check logs for DB errors!')
 
         # set up the basics of insert window
         insert_root = tkinter.Toplevel()
@@ -482,21 +502,51 @@ def gui_normal_window():
         btn.grid(row=row_i, column=0, columnspan=3, pady=5)
 
     def modify(chosen_table_arg):
-        pass
+        def make_query(table, columns, where):
+            columns_raw = mysql_query('DESCRIBE ' + table)
+            colnames = []
+            for raw in columns_raw:
+                colnames.append(raw[0])
+            separated_columns = []
+            tmp = columns
+            tmp = ''.join(tmp.split())
+            separated_columns = tmp.split(',')
+            if ___DEBUG_MODE___ is True:
+                print(separated_columns)
+
+        modify_window_root = tkinter.Toplevel()
+        modify_window_root.title('Modify record')
+        modify_window_root.columnconfigure(0, weight=1)
+        modify_window_root.rowconfigure(0, weight=1)
+
+        modify_main_frame = ttk.Frame(modify_window_root)
+        modify_main_frame.grid(row=0, column=0)
+        ttk.Label(modify_main_frame, text='Columns, separated by commas').grid(row=0, column=0)
+        ttk.Label(modify_main_frame, text='WHERE clause').grid(row=1, column=0)
+        modify_columns_entry = ttk.Entry(modify_main_frame)
+        modify_where_entry = ttk.Entry(modify_main_frame)
+        modify_columns_entry.grid(row=0, column=1)
+        modify_where_entry.grid(row=1, column=1)
+
+        ttk.Button(modify_main_frame,
+                   text='Update',
+                   command=lambda: make_query(chosen_table_arg,
+                                              modify_columns_entry.get(),
+                                              modify_where_entry.get())).grid(row=2, column=0, columnspan=2)
 
     def delete(chosen_table_arg):
         # TODO: implement making the DELETE query with handling no column or where clauses
         def make_query(table, col, cols, where):
-            if col is '':
-                if where is '':
+            if col == '':
+                if where == '':
                     debug_mysql_delete(table_name=table)
                     tkinter.messagebox.showinfo('Info', 'Good arguments, check logs for possible DB error!')
                 else:
                     tkinter.messagebox.showwarning('Warning', 'You can not add a where clause if no column is chosen!')
-            elif col is not '':
+            elif col != '':
                 if col not in columns:
                     tkinter.messagebox.showwarning('Warning', 'Requested column is not in table!')
-                elif where is '':
+                elif where == '':
                     tkinter.messagebox.showwarning('Warning', 'Must give a where clause for column!')
                 else:
                     debug_mysql_delete(table_name=table, column_arg=col, where_arg=where)
@@ -642,6 +692,11 @@ def gui_home_window(root):
 
 
 if __name__ == '__main__':
+    '''
+    mysql_query(debug_mysql_query_update(table='targy',
+                                         columns=['ajanlott_felev', 'nev'],
+                                         values=['10', 'macska'], where="ajanlott_felev=2"), fetch=False)
+    '''
     root_widget = tkinter.Tk()
     scr_w = str(root_widget.winfo_screenwidth() // 3)
     scr_h = str(root_widget.winfo_screenheight() // 3)
