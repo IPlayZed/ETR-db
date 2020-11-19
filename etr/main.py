@@ -321,12 +321,12 @@ def debug_string_is_int(string):
 
 
 def gui_normal_window():
-    # functionality lambdas
     # TODO: implement GUI graphing
     ___INTEGER___ = 'i'
     ___U_INTEGER___ = 'ui'
     ___STRING___ = 'str'
 
+    # functionality lambdas
     def get_column_meta(columns, column_index):
         tmp = columns[column_index][1]
         if tmp.startswith('varchar') is True:
@@ -480,9 +480,42 @@ def gui_normal_window():
         pass
 
     def delete(chosen_table_arg):
-        pass
+        # TODO: implement making the DELETE query with handling no column or where clause
+        def make_query(table, col, where):
+            pass
 
-    # root setup
+        # get meta about table
+        columns_raw = mysql_query('DESCRIBE ' + chosen_table_arg)
+        columns = []
+        for raw in columns_raw:
+            columns.append(raw[0])
+
+        # new toplevel window root setup
+        delete_window_root = tkinter.Toplevel()
+        delete_window_root.title("Delete from '" + chosen_table_arg)
+        delete_window_root.columnconfigure(0, weight=1)
+        delete_window_root.rowconfigure(0, weight=1)
+
+        # basic widgets setup
+        delete_window_main_frame = ttk.Frame(delete_window_root)
+        delete_window_main_frame.grid(row=0, column=0)
+        table_label = tkinter.Label(delete_window_main_frame, text='table')
+        column_label = tkinter.Label(delete_window_main_frame, text='column')
+        where_label = tkinter.Label(delete_window_main_frame, text='WHERE condition')
+        table_entry = tkinter.Entry(delete_window_main_frame)
+        column_entry = tkinter.Entry(delete_window_main_frame)
+        where_entry = tkinter.Entry(delete_window_main_frame)
+        table_label.grid(row=0, column=0)
+        column_label.grid(row=1, column=0)
+        where_label.grid(row=2, column=0)
+        table_entry.grid(row=0, column=1)
+        column_entry.grid(row=1, column=1)
+        where_entry.grid(row=2, column=1)
+        tkinter.Button(delete_window_main_frame, text='Delete',
+                       command=lambda: make_query(table=table_entry.get(), col=column_entry.get(),
+                                                  where=where_entry.get())).grid(row_i=3, column=0, columnspan=3)
+
+    # new toplevel window root setup
     normal_window_root = tkinter.Toplevel()
     normal_window_root.title('SQL queries')
     normal_window_root.columnconfigure(0, weight=1)
