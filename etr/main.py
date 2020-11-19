@@ -110,14 +110,20 @@ def generator_get_random_address_list(list_len):
     return generated_list
 
 
-def generator_concatenate_sql_params(str_list):
+def generator_concatenate_sql_params(str_list, quoted_params=False):
     index = 1
-    returnable_str = ''
+    returnable_str = ""
     for string in str_list:
         if index != len(str_list):
-            returnable_str += (' ' + string + ', ')
+            if quoted_params is True:
+                returnable_str += (" '" + string + "', ")
+            else:
+                returnable_str += (' ' + string + ', ')
         else:
-            returnable_str += (' ' + string + ' ')
+            if quoted_params is True:
+                returnable_str += (" '" + string + "'")
+            else:
+                returnable_str += (' ' + string + ' ')
         index += 1
     return returnable_str
 
@@ -132,6 +138,8 @@ def mysql_query(query, user_arg='root', password_arg='', host_arg='localhost', d
         returnable = None
         if fetch is True:
             returnable = cursor.fetchall()
+        else:
+            clx.commit()
         clx.close()
         return returnable
     # implement more error handling, for the cursor() as well!!!
@@ -297,7 +305,7 @@ def debug_mysql_query_insert_into(table, values, columns=None):
         base_str += generator_concatenate_sql_params(str_list=columns)
         base_str += ')'
     base_str += ' VALUES ('
-    base_str += generator_concatenate_sql_params(str_list=values)
+    base_str += generator_concatenate_sql_params(str_list=values, quoted_params=True)
     base_str += ')'
     base_str = base_str.replace('  ', ' ').replace('( ', '(').replace(' )', ')').strip()
     print(base_str)
@@ -312,7 +320,7 @@ def debug_string_is_int(string):
         return False
 
 
-def gui_normal_window(root):
+def gui_normal_window():
     # functionality lambdas
     # TODO: implement GUI graphing
     ___INTEGER___ = 'i'
@@ -344,7 +352,6 @@ def gui_normal_window(root):
         # set up main new toplevel window root
         query_window_root = tkinter.Toplevel()
         query_window_root.title('Results from table \'' + chosen_table_arg + '\'')
-        # query_window_root.geometry(scr_w_normal + 'x' + scr_h_normal)
 
         # set up base frame in new root
         query_window_mainframe = ttk.Frame(query_window_root)
@@ -358,7 +365,6 @@ def gui_normal_window(root):
         query_window_base_label.grid(row=0, column=0, columnspan=query_res_column_num)
 
         # get queried table's columns
-        columns = []
         columns = debug_mysql_get_col_names(chosen_table_arg)
 
         # if the table has columns
@@ -442,7 +448,7 @@ def gui_normal_window(root):
 
                 value_list.append(inp)
                 index += 1
-            mysql_query(debug_mysql_query_insert_into(table=chosen_table_arg, values=value_list))
+            mysql_query(debug_mysql_query_insert_into(table=chosen_table_arg, values=value_list), fetch=False)
 
         # set up the basics of insert window
         insert_root = tkinter.Toplevel()
@@ -580,14 +586,13 @@ def gui_home_window(root):
 
     title_label = ttk.Label(main_frame, text="Home")
     admin_button = ttk.Button(main_frame, text="Admin functions", command=lambda: gui_admin_window(root=root))
-    user_button = ttk.Button(main_frame, text="Make queries", command=lambda: gui_normal_window(root=root))
+    user_button = ttk.Button(main_frame, text="Make queries", command=lambda: gui_normal_window())
     title_label.grid(row=0, column=0, pady=10, sticky=N)
     admin_button.grid(row=1, column=0, pady=5)
     user_button.grid(row=2, column=0, pady=5)
 
 
 if __name__ == '__main__':
-    a = mysql_query('DESCRIBE targy')
     root_widget = tkinter.Tk()
     scr_w = str(root_widget.winfo_screenwidth() // 3)
     scr_h = str(root_widget.winfo_screenheight() // 3)
