@@ -480,7 +480,7 @@ def gui_normal_window():
         pass
 
     def delete(chosen_table_arg):
-        # TODO: implement making the DELETE query with handling no column or where clause
+        # TODO: implement making the DELETE query with handling no column or where clauses
         def make_query(table, col, where):
             pass
 
@@ -499,21 +499,17 @@ def gui_normal_window():
         # basic widgets setup
         delete_window_main_frame = ttk.Frame(delete_window_root)
         delete_window_main_frame.grid(row=0, column=0)
-        table_label = tkinter.Label(delete_window_main_frame, text='table')
         column_label = tkinter.Label(delete_window_main_frame, text='column')
         where_label = tkinter.Label(delete_window_main_frame, text='WHERE condition')
-        table_entry = tkinter.Entry(delete_window_main_frame)
         column_entry = tkinter.Entry(delete_window_main_frame)
         where_entry = tkinter.Entry(delete_window_main_frame)
-        table_label.grid(row=0, column=0)
         column_label.grid(row=1, column=0)
         where_label.grid(row=2, column=0)
-        table_entry.grid(row=0, column=1)
         column_entry.grid(row=1, column=1)
         where_entry.grid(row=2, column=1)
         tkinter.Button(delete_window_main_frame, text='Delete',
-                       command=lambda: make_query(table=table_entry.get(), col=column_entry.get(),
-                                                  where=where_entry.get())).grid(row_i=3, column=0, columnspan=3)
+                       command=lambda: make_query(table=chosen_table_arg, col=column_entry.get(),
+                                                  where=where_entry.get())).grid(row=3, column=0, columnspan=3)
 
     # new toplevel window root setup
     normal_window_root = tkinter.Toplevel()
