@@ -202,9 +202,10 @@ def debug_mysql_fill_dummy_data(records_num=100):
     hallgato_keresztnev_list = generator_get_random_name_list(records_num)
     hallgato_titulus_list = generator_get_random_binary_choice_list(records_num, None, "Dr.")
 
+    con = mysql.connector.connect(user='root', password='', host='localhost', database='etrdb')
+    cursor = con.cursor()
     for i in range(records_num):
-        con = mysql.connector.connect(user='root', password='', host='localhost', database='etrdb')
-        cursor = con.cursor()
+
         # fill table oktato
         if oktato_titulus_list[i] is None:
             insertable = (
@@ -212,7 +213,7 @@ def debug_mysql_fill_dummy_data(records_num=100):
             cursor.execute(
                 'INSERT INTO oktato (oktato_etr_id, vezeteknev, keresztnev, beosztas) VALUES (%s, %s, %s, %s)',
                 insertable)
-            cursor.execute('commit')
+            con.commit()
         else:
             insertable = (
                 oktato_etr_id_list[i], oktato_vezeteknev_list[i], oktato_keresztnev_list[i], oktato_titulus_list[i],
@@ -221,17 +222,17 @@ def debug_mysql_fill_dummy_data(records_num=100):
                 'INSERT INTO oktato (oktato_etr_id, vezeteknev, keresztnev, titulus, beosztas) VALUES (%s, %s, %s, '
                 '%s, %s)',
                 insertable)
-            cursor.execute('commit')
+            con.commit()
 
         # fill table terem
         insertable = (terem_teremszam_list[i], terem_ferohely_list[i], terem_cim_list[i])
         cursor.execute('INSERT INTO terem (teremszam, ferohely, cim) VALUES (%s, %s, %s)', insertable)
-        cursor.execute('commit')
+        con.commit()
 
         # fill table targy
         insertable = (targy_targykod_list[i], targy_ajanlott_felev_list[i], targy_nev_list[i])
         cursor.execute('INSERT INTO targy (targykod, ajanlott_felev, nev) VALUES (%s, %s, %s)', insertable)
-        cursor.execute('commit')
+        con.commit()
 
         # fill table hallgato
         if hallgato_titulus_list[i] is None:
@@ -242,7 +243,7 @@ def debug_mysql_fill_dummy_data(records_num=100):
                 'INSERT INTO hallgato (hallgato_etr_id, lakhely, tagozat_forma, koltsegteritesi_forma, vezeteknev, '
                 'keresztnev) VALUES (%s, %s, %s, %s, %s, %s)',
                 insertable)
-            cursor.execute('commit')
+            con.commit()
         else:
             insertable = (hallgato_etr_id_list[i], hallgato_lakhely_list[i], hallgato_tagozat_forma_list[i],
                           hallgato_koltsegteritesi_forma_list[i], hallgato_vezeteknev_list[i],
@@ -252,7 +253,20 @@ def debug_mysql_fill_dummy_data(records_num=100):
                 'keresztnev, titulus) VALUES (%s, %s, %s, %s, %s, %s, %s)',
                 insertable)
             cursor.execute('commit')
-        con.close()
+
+    # add some data for other tables in need of the previous ones
+    # add some data to gepterem
+    index = 0
+    while index < records_num // 2:
+        insertable = (terem_teremszam_list[index],
+                      terem_ferohely_list[index],
+                      terem_cim_list[index], terem_ferohely_list[index])
+        cursor.execute('INSERT INTO gepterem (teremszam, ferohel, cim, gepek_szama) VALUES (%s, %s, %s, %s)',
+                       insertable)
+        con.commit()
+        index += 1
+
+    con.close()
 
 
 # TODO (V2): make this function, so it only returns the query string itself //
@@ -686,17 +700,14 @@ def gui_home_window(root):
     title_label = ttk.Label(main_frame, text="Home")
     admin_button = ttk.Button(main_frame, text="Admin functions", command=lambda: gui_admin_window(root=root))
     user_button = ttk.Button(main_frame, text="Make queries", command=lambda: gui_normal_window())
+    compound_button = ttk.Button(main_frame, text='Compound query examples')
     title_label.grid(row=0, column=0, pady=10, sticky=N)
     admin_button.grid(row=1, column=0, pady=5)
     user_button.grid(row=2, column=0, pady=5)
+    compound_button.grid(row=3, column=0, pady=5)
 
 
 if __name__ == '__main__':
-    '''
-    mysql_query(debug_mysql_query_update(table='targy',
-                                         columns=['ajanlott_felev', 'nev'],
-                                         values=['10', 'macska'], where="ajanlott_felev=2"), fetch=False)
-    '''
     root_widget = tkinter.Tk()
     scr_w = str(root_widget.winfo_screenwidth() // 3)
     scr_h = str(root_widget.winfo_screenheight() // 3)
