@@ -172,6 +172,7 @@ def debug_mysql_query_select(table, columns=None, distinct=False, where=None):
         pass
     return base_str
 
+
 # TODO(V2): implement generators for more generic table filling capibilities
 def debug_mysql_fill_dummy_data(records_num=100):
     # ALWAYS make sure to open a new connection
@@ -272,8 +273,8 @@ def debug_mysql_fill_dummy_data(records_num=100):
     for item in kurzus_kurzus_id_list:
         tmp = generator_get_random_int_list(1, 20, 400)[0]
         insertable = (
-        item, generator_get_random_int_list(1, 1, 4)[0], tmp, generator_get_random_int_list(1, tmp, 400)[0],
-        terem_teremszam_list[index], targy_targykod_list[index], oktato_etr_id_list[index])
+            item, generator_get_random_int_list(1, 1, 4)[0], tmp, generator_get_random_int_list(1, tmp, 400)[0],
+            terem_teremszam_list[index], targy_targykod_list[index], oktato_etr_id_list[index])
         cursor.execute(
             'INSERT INTO kurzus (kurzus_id, kreditszam, maximum_letszam, letszam, teremszam, targykod, oktato_etr_id) VALUES (%s, %s, %s, %s, %s, %s, %s)',
             insertable)
@@ -396,6 +397,7 @@ def gui_normal_window():
         return col_dict
 
     def list_db(chosen_table_arg):
+        ___ZERO_WIDTH___ = tkinter.font.Font(weight='normal').measure('0')
         # get the result of query in a list of tuples and meta
         query_res = mysql_query(debug_mysql_query_select(table=chosen_table_arg))
         query_res_column_num = len(query_res)
@@ -445,18 +447,12 @@ def gui_normal_window():
             query_columns_data_scrollable_frame = ScrollableFrame(query_columns_data_frame)
             # population
             max_length = 0
-            max_c = tkinter.font.Font(weight='normal').measure('0')
             for item in query_res:
                 row_index += 1
                 max_length_tmp = 0
                 for item_column in item:
-                    # row was rowindex
                     tmp = ttk.Label(query_columns_data_scrollable_frame.scrollable_frame, text=item_column)
                     tmp.grid(row=row_index, column=column_index, padx=5, pady=10)
-                    '''
-                    if tmp.winfo_screenwidth() > max_w:
-                        max_w = tmp.winfo_screenwidth()
-                    '''
                     if item_column is not None:
                         max_length_tmp += len(str(item_column))
                     column_index += 1
@@ -464,7 +460,7 @@ def gui_normal_window():
                     max_length = max_length_tmp
                 column_index = 0
             query_columns_data_scrollable_frame.grid(row=0, column=0, rowspan=query_res_column_num)
-            query_columns_data_scrollable_frame.change_canvas_size_w(w=max_length * max_c)
+            query_columns_data_scrollable_frame.change_canvas_size_w(w=max_length * ___ZERO_WIDTH___)
         # if the queried table did not have any columns
         else:
             tkinter.messagebox.showwarning('Warning', 'Queried table has no columns!')
@@ -705,6 +701,49 @@ def gui_admin_window(root):
     truncate_tables_button.grid(row=2, column=0)
 
 
+def gui_compound_window():
+    # TODO: Make this back into different functions, query output is vastly different
+    def example(query_string, query_size):
+        ___ZERO_WIDTH___ = tkinter.font.Font(weight='normal').measure('0')
+        example_1_window_root = tkinter.Toplevel()
+        example_1_window_root.title('Example 1')
+        example_1_window_root.columnconfigure(0, weight=1)
+        example_1_window_root.rowconfigure(0, weight=1)
+
+        example_1_main_frame = ttk.Frame(example_1_window_root)
+        example_1_main_frame.grid(row=0, column=0)
+        labelholder = ttk.Labelframe(example_1_main_frame, text='Query')
+        queryholder = ttk.Labelframe(example_1_main_frame, text='Results')
+        labelholder.grid(row=0, column=0, pady=5)
+        queryholder.grid(row=1, column=0, pady=5)
+
+        string = query_string
+        ttk.Label(labelholder, text=string).grid(row=0, column=0)
+        query_res = mysql_query(query=string)
+        scrollable = ScrollableFrame(queryholder)
+        scrollable.grid(row=1, column=0)
+        index = 0
+        for res in query_res:
+            ttk.Label(scrollable.scrollable_frame, text=res[0]).grid(row=index, column=0, pady=5)
+            index += 1
+        scrollable.change_canvas_size_w(6 * ___ZERO_WIDTH___)
+
+    compound_window_root = tkinter.Toplevel()
+    compound_window_root.title('Compound query examples')
+    compound_window_root.columnconfigure(0, weight=1)
+    compound_window_root.rowconfigure(0, weight=1)
+
+    compound_main_frame = ttk.Frame(compound_window_root)
+    compound_main_frame.grid(row=0, column=0)
+    ex_1_str = "SELECT oktato.oktato_etr_id FROM oktato INNER JOIN kurzus ON oktato.oktato_etr_id=kurzus.oktato_etr_id \nWHERE oktato.titulus='Dr.' GROUP BY kurzus.letszam ORDER BY kurzus.letszam DESC"
+    ex_2_str = "SELECT A.oktato_etr_id AS oktato_etr_idA, B.oktato_etr_id AS oktato_etr_idB, A.keresztnev FROM oktato A, oktato B WHERE A.oktato_etr_id <> B.oktato_etr_id AND A.keresztnev = B.keresztnev ORDER BY A.keresztnev"
+
+    ttk.Button(compound_main_frame, text='Example 1', command=lambda: example_1(ex_1_str, 6)).grid(row=0, column=0,
+                                                                                                   pady=3)
+    ttk.Button(compound_main_frame, text='Example 2').grid(row=1, column=0, pady=3)
+    ttk.Button(compound_main_frame, text='Example 3').grid(row=2, column=0, pady=3)
+
+
 def gui_home_window(root):
     root.title("ETR-DB")
     main_frame = ttk.Frame(root, width=scr_w, height=scr_h)
@@ -715,10 +754,11 @@ def gui_home_window(root):
     title_label = ttk.Label(main_frame, text="Home")
     admin_button = ttk.Button(main_frame, text="Admin functions", command=lambda: gui_admin_window(root=root))
     user_button = ttk.Button(main_frame, text="Make queries", command=lambda: gui_normal_window())
-    compound_button = ttk.Button(main_frame, text='Compound query examples')
+    compound_button = ttk.Button(main_frame, text='Compound query examples', command=lambda: gui_compound_window())
     title_label.grid(row=0, column=0, pady=10, sticky=N)
     admin_button.grid(row=1, column=0, pady=5)
     user_button.grid(row=2, column=0, pady=5)
+    compound_button.grid(row=3, column=0, pady=5)
     compound_button.grid(row=3, column=0, pady=5)
 
 
@@ -732,4 +772,3 @@ if __name__ == '__main__':
     # root_widget.iconbitmap('icon.ico')
     gui_home_window(root=root_widget)
     root_widget.mainloop()
-    root_widget.destroy()
