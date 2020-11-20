@@ -172,7 +172,7 @@ def debug_mysql_query_select(table, columns=None, distinct=False, where=None):
         pass
     return base_str
 
-
+# TODO(V2): implement generators for more generic table filling capibilities
 def debug_mysql_fill_dummy_data(records_num=100):
     # ALWAYS make sure to open a new connection
 
@@ -266,6 +266,19 @@ def debug_mysql_fill_dummy_data(records_num=100):
         con.commit()
         index += 1
 
+    # add some data to kurzus
+    index = 0
+    kurzus_kurzus_id_list = generator_get_random_alphanumeric_str_list(6, records_num // 2)
+    for item in kurzus_kurzus_id_list:
+        tmp = generator_get_random_int_list(1, 20, 400)[0]
+        insertable = (
+        item, generator_get_random_int_list(1, 1, 4)[0], tmp, generator_get_random_int_list(1, tmp, 400)[0],
+        terem_teremszam_list[index], targy_targykod_list[index], oktato_etr_id_list[index])
+        cursor.execute(
+            'INSERT INTO kurzus (kurzus_id, kreditszam, maximum_letszam, letszam, teremszam, targykod, oktato_etr_id) VALUES (%s, %s, %s, %s, %s, %s, %s)',
+            insertable)
+        con.commit()
+        index += 1
     con.close()
 
 
@@ -617,10 +630,12 @@ def gui_normal_window():
     chosen_table = tkinter.StringVar()
     chosen_table.set('oktato')
     radio_b_modes = [
-        ('table: \'oktato\'', 'oktato'),
-        ('table: \'hallgato\'', 'hallgato'),
-        ('table: \'targy\'', 'targy'),
-        ('table: \'terem\'', 'terem'),
+        ("table: 'oktato'", 'oktato'),
+        ("table: 'hallgato'", 'hallgato'),
+        ("table: 'targy'", 'targy'),
+        ("table: 'terem'", 'terem'),
+        ("table: 'kurzus'", 'kurzus'),
+        ("table: ")
     ]
 
     def radio_b_clicked(printable=None):
