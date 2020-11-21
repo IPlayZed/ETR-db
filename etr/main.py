@@ -701,8 +701,7 @@ def gui_admin_window(root):
     truncate_tables_button.grid(row=2, column=0)
 
 
-def gui_compound_window():
-    # TODO: Make this back into different functions, query output is vastly different
+def gui_compound_window(scr_width, scr_height):
     def example_1():
         ___ZERO_WIDTH___ = tkinter.font.Font(weight='normal').measure('0')
         example_1_window_root = tkinter.Toplevel()
@@ -720,7 +719,7 @@ def gui_compound_window():
         ex_1_str = "SELECT oktato.oktato_etr_id FROM oktato INNER JOIN kurzus ON oktato.oktato_etr_id=kurzus.oktato_etr_id \nWHERE oktato.titulus='Dr.' GROUP BY kurzus.letszam ORDER BY kurzus.letszam DESC"
 
         ttk.Label(labelholder, text=ex_1_str).grid(row=0, column=0)
-        query_res = mysql_query(query=ex_1_str)
+        query_res = mysql_query(query=ex_1_str.replace('\n', ''))
         scrollable = ScrollableFrame(queryholder)
         scrollable.grid(row=1, column=0)
         index = 0
@@ -729,20 +728,99 @@ def gui_compound_window():
             index += 1
         scrollable.change_canvas_size_w(6 * ___ZERO_WIDTH___)
 
+    def example_2():
+        ___ZERO_WIDTH___ = tkinter.font.Font(weight='normal').measure('0')
+        example_2_window_root = tkinter.Toplevel()
+        example_2_window_root.title('Example 2')
+        example_2_window_root.columnconfigure(0, weight=1)
+        example_2_window_root.rowconfigure(0, weight=1)
+
+        example_2_main_frame = ttk.Frame(example_2_window_root)
+        example_2_main_frame.grid(row=0, column=0)
+
+        labelholder = ttk.Labelframe(example_2_main_frame, text='Query')
+        queryholder = ttk.Labelframe(example_2_main_frame, text='Results')
+        labelholder.grid(row=0, column=0)
+        queryholder.grid(row=1, column=0)
+
+        ex_2_str = "SELECT A.oktato_etr_id AS oktato_etr_idA, B.oktato_etr_id AS oktato_etr_idB, A.keresztnev \nFROM oktato A, oktato B \nWHERE A.oktato_etr_id <> B.oktato_etr_id AND A.keresztnev = B.keresztnev \nGROUP BY A.keresztnev \nORDER BY A.keresztnev;"
+        ttk.Label(labelholder, text=ex_2_str).grid(row=0, column=0)
+        query_res = mysql_query(query=ex_2_str.replace('\n', ''))
+        scrollable = ScrollableFrame(queryholder)
+        scrollable.grid(row=1, column=0)
+        i = 0
+        ttk.Label(scrollable.scrollable_frame, text='Oktató 1').grid(row=0, column=0, padx=3, pady=5)
+        ttk.Label(scrollable.scrollable_frame, text='Oktató 2').grid(row=0, column=1, padx=3, pady=5)
+        ttk.Label(scrollable.scrollable_frame, text='Keresztnév').grid(row=0, column=2, padx=3, pady=5)
+        max_len = len('Oktató 1' + 'Oktató 2' + 'Keresztnév') * ___ZERO_WIDTH___ + 15
+        col_i = 0
+        row_i = 1
+        for res in query_res:
+            tmp = ''
+            for col in res:
+                tmp = tmp + str(col)
+                ttk.Label(scrollable.scrollable_frame, text=str(col)).grid(row=row_i, column=col_i, pady=15)
+                col_i += 1
+            row_i += 1
+            col_i = 0
+            tmp = len(tmp) * ___ZERO_WIDTH___ + 15
+            if tmp > max_len:
+                max_len = tmp
+        scrollable.change_canvas_size_w(max_len)
+
+    def example_3():
+        ___ZERO_WIDTH___ = tkinter.font.Font(weight='normal').measure('0')
+        example_3_window_root = tkinter.Toplevel()
+        example_3_window_root.title('Example 3')
+        example_3_window_root.columnconfigure(0, weight=1)
+        example_3_window_root.rowconfigure(0, weight=1)
+
+        example_3_main_frame = ttk.Frame(example_3_window_root)
+        example_3_main_frame.grid(row=0, column=0)
+
+        labelholder = ttk.Labelframe(example_3_main_frame, text='Query')
+        queryholder = ttk.Labelframe(example_3_main_frame, text='Results')
+        labelholder.grid(row=0, column=0)
+        queryholder.grid(row=1, column=0)
+
+        ex_3_str = "SELECT B.teremszam AS terem_teremszam, B.cim AS terem_cim, B.ferohely AS terem_ferohely \nFROM gepterem A, terem B \nWHERE B.ferohely > \n(SELECT ferohel \nFROM gepterem \nORDER BY RAND() \nLIMIT 1) \nGROUP BY B.teremszam \nORDER BY B.ferohely \nASC"
+
+        ttk.Label(labelholder, text=ex_3_str).grid(row=0, column=0)
+        query_res = mysql_query(query=ex_3_str.replace('\n', ''))
+        scrollable = ScrollableFrame(queryholder)
+        scrollable.grid(row=1, column=0)
+        i = 0
+        ttk.Label(scrollable.scrollable_frame, text='Terem: teremszám').grid(row=0, column=0, padx=3, pady=5)
+        ttk.Label(scrollable.scrollable_frame, text='Terem: cím').grid(row=0, column=1, padx=3, pady=5)
+        ttk.Label(scrollable.scrollable_frame, text='Terem: férőhely').grid(row=0, column=2, padx=3, pady=5)
+        max_len = len('Terem: teremszám' + 'Terem: cím' + 'Terem: férőhely') * ___ZERO_WIDTH___ + 15
+        col_i = 0
+        row_i = 1
+        for res in query_res:
+            tmp = ''
+            for col in res:
+                tmp = tmp + str(col)
+                ttk.Label(scrollable.scrollable_frame, text=str(col)).grid(row=row_i, column=col_i, pady=15)
+                col_i += 1
+            row_i += 1
+            col_i = 0
+            tmp = len(tmp) * ___ZERO_WIDTH___ + 15
+            if tmp > max_len:
+                max_len = tmp
+        scrollable.change_canvas_size_w(max_len)
+
     compound_window_root = tkinter.Toplevel()
     compound_window_root.title('Compound query examples')
+    compound_window_root.geometry(str(scr_w + 'x' + scr_h))
     compound_window_root.columnconfigure(0, weight=1)
     compound_window_root.rowconfigure(0, weight=1)
 
     compound_main_frame = ttk.Frame(compound_window_root)
     compound_main_frame.grid(row=0, column=0)
 
-    ex_2_str = "SELECT A.oktato_etr_id AS oktato_etr_idA, B.oktato_etr_id AS oktato_etr_idB, A.keresztnev FROM oktato A, oktato B WHERE A.oktato_etr_id <> B.oktato_etr_id AND A.keresztnev = B.keresztnev ORDER BY A.keresztnev"
-
-    ttk.Button(compound_main_frame, text='Example 1', command=lambda: example_1()).grid(row=0, column=0,
-                                                                                        pady=3)
-    ttk.Button(compound_main_frame, text='Example 2').grid(row=1, column=0, pady=3)
-    ttk.Button(compound_main_frame, text='Example 3').grid(row=2, column=0, pady=3)
+    ttk.Button(compound_main_frame, text='Example 1', command=lambda: example_1()).grid(row=0, column=0, pady=3)
+    ttk.Button(compound_main_frame, text='Example 2', command=lambda: example_2()).grid(row=1, column=0, pady=3)
+    ttk.Button(compound_main_frame, text='Example 3', command=lambda: example_3()).grid(row=2, column=0, pady=3)
 
 
 def gui_home_window(root):
@@ -755,7 +833,8 @@ def gui_home_window(root):
     title_label = ttk.Label(main_frame, text="Home")
     admin_button = ttk.Button(main_frame, text="Admin functions", command=lambda: gui_admin_window(root=root))
     user_button = ttk.Button(main_frame, text="Make queries", command=lambda: gui_normal_window())
-    compound_button = ttk.Button(main_frame, text='Compound query examples', command=lambda: gui_compound_window())
+    compound_button = ttk.Button(main_frame, text='Compound query examples',
+                                 command=lambda: gui_compound_window(scr_width=scr_w, scr_height=scr_h))
     title_label.grid(row=0, column=0, pady=10, sticky=N)
     admin_button.grid(row=1, column=0, pady=5)
     user_button.grid(row=2, column=0, pady=5)
