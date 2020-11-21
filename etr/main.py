@@ -703,7 +703,7 @@ def gui_admin_window(root):
 
 def gui_compound_window():
     # TODO: Make this back into different functions, query output is vastly different
-    def example(query_string, query_size):
+    def example_1():
         ___ZERO_WIDTH___ = tkinter.font.Font(weight='normal').measure('0')
         example_1_window_root = tkinter.Toplevel()
         example_1_window_root.title('Example 1')
@@ -717,9 +717,10 @@ def gui_compound_window():
         labelholder.grid(row=0, column=0, pady=5)
         queryholder.grid(row=1, column=0, pady=5)
 
-        string = query_string
-        ttk.Label(labelholder, text=string).grid(row=0, column=0)
-        query_res = mysql_query(query=string)
+        ex_1_str = "SELECT oktato.oktato_etr_id FROM oktato INNER JOIN kurzus ON oktato.oktato_etr_id=kurzus.oktato_etr_id \nWHERE oktato.titulus='Dr.' GROUP BY kurzus.letszam ORDER BY kurzus.letszam DESC"
+
+        ttk.Label(labelholder, text=ex_1_str).grid(row=0, column=0)
+        query_res = mysql_query(query=ex_1_str)
         scrollable = ScrollableFrame(queryholder)
         scrollable.grid(row=1, column=0)
         index = 0
@@ -735,11 +736,11 @@ def gui_compound_window():
 
     compound_main_frame = ttk.Frame(compound_window_root)
     compound_main_frame.grid(row=0, column=0)
-    ex_1_str = "SELECT oktato.oktato_etr_id FROM oktato INNER JOIN kurzus ON oktato.oktato_etr_id=kurzus.oktato_etr_id \nWHERE oktato.titulus='Dr.' GROUP BY kurzus.letszam ORDER BY kurzus.letszam DESC"
+
     ex_2_str = "SELECT A.oktato_etr_id AS oktato_etr_idA, B.oktato_etr_id AS oktato_etr_idB, A.keresztnev FROM oktato A, oktato B WHERE A.oktato_etr_id <> B.oktato_etr_id AND A.keresztnev = B.keresztnev ORDER BY A.keresztnev"
 
-    ttk.Button(compound_main_frame, text='Example 1', command=lambda: example_1(ex_1_str, 6)).grid(row=0, column=0,
-                                                                                                   pady=3)
+    ttk.Button(compound_main_frame, text='Example 1', command=lambda: example_1()).grid(row=0, column=0,
+                                                                                        pady=3)
     ttk.Button(compound_main_frame, text='Example 2').grid(row=1, column=0, pady=3)
     ttk.Button(compound_main_frame, text='Example 3').grid(row=2, column=0, pady=3)
 
