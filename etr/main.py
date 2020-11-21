@@ -714,7 +714,7 @@ def gui_compound_window():
         example_1_main_frame.grid(row=0, column=0)
         labelholder = ttk.Labelframe(example_1_main_frame, text='Query')
         queryholder = ttk.Labelframe(example_1_main_frame, text='Results')
-        labelholder.grid(row=0, column=0, pady=5)
+        labelholder.grid(row=0, column=0, pady=5, padx=5)
         queryholder.grid(row=1, column=0, pady=5)
 
         ex_1_str = "SELECT oktato.oktato_etr_id FROM oktato INNER JOIN kurzus ON oktato.oktato_etr_id=kurzus.oktato_etr_id \nWHERE oktato.titulus='Dr.' GROUP BY kurzus.letszam ORDER BY kurzus.letszam DESC"
