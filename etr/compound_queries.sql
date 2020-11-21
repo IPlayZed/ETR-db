@@ -32,4 +32,4 @@ WHERE B.ferohely >
        LIMIT 1)
 GROUP BY B.teremszam
 ORDER BY B.ferohely
-    ASC
+ASC
