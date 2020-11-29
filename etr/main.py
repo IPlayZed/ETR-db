@@ -631,7 +631,6 @@ def gui_normal_window():
         ("table: 'targy'", 'targy'),
         ("table: 'terem'", 'terem'),
         ("table: 'kurzus'", 'kurzus'),
-        ("table: ")
     ]
 
     def radio_b_clicked(printable=None):
